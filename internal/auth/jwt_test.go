@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"math"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,7 +30,10 @@ func TestIssuerMintProducesValidRegistryJWT(t *testing.T) {
 		Service: "registry.example.test",
 		TTL:     300 * time.Second,
 	}
-	issuer := auth.NewIssuer(cfg, key, cert)
+	issuer, err := auth.NewIssuer(cfg, key, cert)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	access := []acl.Scope{
 		{Type: "repository", Name: "danielzelisko/app", Actions: []string{"pull", "push"}},
@@ -132,6 +136,13 @@ func TestIssuerMintProducesValidRegistryJWT(t *testing.T) {
 	if !ok || kid == "" {
 		t.Fatalf("kid=%v", parsed.Header["kid"])
 	}
+	expectedKid, err := auth.LibtrustKeyID(&key.PublicKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if kid != expectedKid {
+		t.Fatalf("kid=%q want %q", kid, expectedKid)
+	}
 }
 
 func TestIssuerMintAllowsAnonymousSubject(t *testing.T) {
@@ -140,10 +151,13 @@ func TestIssuerMintAllowsAnonymousSubject(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	issuer := auth.NewIssuer(auth.TokenConfig{
+	issuer, err := auth.NewIssuer(auth.TokenConfig{
 		Issuer:  "https://registry.example.test",
 		Service: "registry.example.test",
 	}, key, cert)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	tokenString, err := issuer.Mint("", []acl.Scope{{Type: "repository", Name: "public/img", Actions: []string{"pull"}}})
 	if err != nil {
@@ -160,5 +174,80 @@ func TestIssuerMintAllowsAnonymousSubject(t *testing.T) {
 	claims := parsed.Claims.(jwt.MapClaims)
 	if claims["sub"] != "" {
 		t.Fatalf("sub=%v want empty", claims["sub"])
+	}
+}
+
+func TestIssuerMintAccessClaimUsesLowercaseJSONKeys(t *testing.T) {
+	dir := t.TempDir()
+	key, cert, err := auth.LoadOrCreateKeys(filepath.Join(dir, "cert.pem"), filepath.Join(dir, "key.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	issuer, err := auth.NewIssuer(auth.TokenConfig{
+		Issuer:  "https://registry.example.test",
+		Service: "registry.example.test",
+	}, key, cert)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tokenString, err := issuer.Mint("user-1", []acl.Scope{
+		{Type: "repository", Name: "danielzelisko/app", Actions: []string{"pull"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		t.Fatalf("token parts=%d", len(parts))
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var claims map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		t.Fatal(err)
+	}
+	rawAccess, ok := claims["access"]
+	if !ok {
+		t.Fatal("missing access claim")
+	}
+
+	var access []map[string]json.RawMessage
+	if err := json.Unmarshal(rawAccess, &access); err != nil {
+		t.Fatal(err)
+	}
+	if len(access) != 1 {
+		t.Fatalf("access len=%d", len(access))
+	}
+	scope := access[0]
+	for _, key := range []string{"type", "name", "actions"} {
+		if _, ok := scope[key]; !ok {
+			t.Fatalf("missing lowercase key %q in access scope: %v", key, scope)
+		}
+	}
+	for k := range scope {
+		if k != "type" && k != "name" && k != "actions" {
+			t.Fatalf("unexpected key %q in access scope", k)
+		}
+	}
+}
+
+func TestNewIssuerReturnsErrorWhenKeyIDFails(t *testing.T) {
+	dir := t.TempDir()
+	_, cert, err := auth.LoadOrCreateKeys(filepath.Join(dir, "cert.pem"), filepath.Join(dir, "key.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = auth.NewIssuer(auth.TokenConfig{
+		Issuer:  "https://registry.example.test",
+		Service: "registry.example.test",
+	}, nil, cert)
+	if err == nil {
+		t.Fatal("expected error when key is nil")
 	}
 }

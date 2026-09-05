@@ -52,7 +52,7 @@ func LoadOrCreateKeys(certPath, keyPath string) (*rsa.PrivateKey, *x509.Certific
 	return key, cert, nil
 }
 
-func libtrustKeyID(pub crypto.PublicKey) (string, error) {
+func LibtrustKeyID(pub crypto.PublicKey) (string, error) {
 	der, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
 		return "", err

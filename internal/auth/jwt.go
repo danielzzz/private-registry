@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"fmt"
 	"time"
 
 	"github.com/danielzelisko/private-registry/internal/acl"
@@ -32,13 +33,19 @@ type Issuer struct {
 	x5c  string
 }
 
-func NewIssuer(cfg TokenConfig, key *rsa.PrivateKey, cert *x509.Certificate) *Issuer {
+func NewIssuer(cfg TokenConfig, key *rsa.PrivateKey, cert *x509.Certificate) (*Issuer, error) {
 	if cfg.TTL == 0 {
 		cfg.TTL = defaultTokenTTL
 	}
-	kid, err := libtrustKeyID(&key.PublicKey)
+	if key == nil {
+		return nil, fmt.Errorf("signing key is required")
+	}
+	if cert == nil {
+		return nil, fmt.Errorf("certificate is required")
+	}
+	kid, err := LibtrustKeyID(&key.PublicKey)
 	if err != nil {
-		kid = ""
+		return nil, err
 	}
 	return &Issuer{
 		cfg:  cfg,
@@ -46,7 +53,7 @@ func NewIssuer(cfg TokenConfig, key *rsa.PrivateKey, cert *x509.Certificate) *Is
 		cert: cert,
 		kid:  kid,
 		x5c:  base64.StdEncoding.EncodeToString(cert.Raw),
-	}
+	}, nil
 }
 
 func (i *Issuer) Mint(subject string, access []acl.Scope) (string, error) {
