@@ -105,6 +105,65 @@ func TestAuthenticateRejectsBadSecret(t *testing.T) {
 	}
 }
 
+func TestAuthenticateRejectsRevokedAPIToken(t *testing.T) {
+	s := openTestStore(t)
+	ctx := context.Background()
+
+	u, err := s.CreateUser(ctx, "alice", "unused", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	secretPart := randomHexSecret(t)
+	tokenHash, err := auth.HashPassword(secretPart)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tokenID, err := s.CreateAPIToken(ctx, u.ID, "ci", tokenHash, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plaintext := "prt_" + tokenID + "_" + secretPart
+
+	if err := s.RevokeAPIToken(ctx, tokenID); err != nil {
+		t.Fatal(err)
+	}
+
+	a := &auth.Authenticator{Store: s}
+	_, err = a.Authenticate(ctx, "alice", plaintext)
+	if !errors.Is(err, auth.ErrInvalidCredentials) {
+		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestAuthenticateRejectsWrongAPITokenSecret(t *testing.T) {
+	s := openTestStore(t)
+	ctx := context.Background()
+
+	u, err := s.CreateUser(ctx, "alice", "unused", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	secretPart := randomHexSecret(t)
+	tokenHash, err := auth.HashPassword(secretPart)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tokenID, err := s.CreateAPIToken(ctx, u.ID, "ci", tokenHash, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrongSecret := randomHexSecret(t)
+	plaintext := "prt_" + tokenID + "_" + wrongSecret
+
+	a := &auth.Authenticator{Store: s}
+	_, err = a.Authenticate(ctx, "alice", plaintext)
+	if !errors.Is(err, auth.ErrInvalidCredentials) {
+		t.Fatalf("err=%v", err)
+	}
+}
+
 func TestAuthenticateRejectsInactiveUser(t *testing.T) {
 	s := openTestStore(t)
 	ctx := context.Background()
