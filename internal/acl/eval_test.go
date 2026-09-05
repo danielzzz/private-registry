@@ -41,6 +41,38 @@ func TestEvaluate_PushImpliesPull(t *testing.T) {
 	}
 }
 
+func TestEvaluate_PushRuleGrantsPullWhenClientRequestsPushOnly(t *testing.T) {
+	rules := []acl.Rule{{
+		SubjectKind: acl.SubjectUser, SubjectID: "u1",
+		Pattern: "app/*", Action: acl.ActionPush,
+	}}
+	id := acl.Identity{UserID: "u1"}
+	req := []acl.Scope{{Type: "repository", Name: "app/web", Actions: []string{"push"}}}
+	got := acl.Evaluate(id, rules, req)
+	if len(got) != 1 {
+		t.Fatalf("got=%v", got)
+	}
+	if !contains(got[0].Actions, "push") || !contains(got[0].Actions, "pull") {
+		t.Fatalf("expected both pull and push, got=%v", got[0].Actions)
+	}
+}
+
+func TestEvaluate_PullRuleDoesNotGrantPush(t *testing.T) {
+	rules := []acl.Rule{{
+		SubjectKind: acl.SubjectUser, SubjectID: "u1",
+		Pattern: "app/*", Action: acl.ActionPull,
+	}}
+	id := acl.Identity{UserID: "u1"}
+	req := []acl.Scope{{Type: "repository", Name: "app/web", Actions: []string{"push", "pull"}}}
+	got := acl.Evaluate(id, rules, req)
+	if len(got) != 1 {
+		t.Fatalf("got=%v", got)
+	}
+	if !contains(got[0].Actions, "pull") || contains(got[0].Actions, "push") {
+		t.Fatalf("expected pull only, got=%v", got[0].Actions)
+	}
+}
+
 func TestEvaluate_GroupAndAnonymous(t *testing.T) {
 	rules := []acl.Rule{
 		{SubjectKind: acl.SubjectGroup, SubjectID: "g1", Pattern: "team/*", Action: acl.ActionPull},
