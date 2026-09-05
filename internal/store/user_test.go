@@ -138,3 +138,27 @@ func TestGetUserByUsernameNotFound(t *testing.T) {
 		t.Fatalf("err=%v", err)
 	}
 }
+
+func TestSetUserActiveNotFound(t *testing.T) {
+	s := openTestDB(t)
+	err := s.SetUserActive(context.Background(), "missing-id", false)
+	if err != sql.ErrNoRows {
+		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestSetUserAdminNotFound(t *testing.T) {
+	s := openTestDB(t)
+	err := s.SetUserAdmin(context.Background(), "missing-id", true)
+	if err != sql.ErrNoRows {
+		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestUpdatePasswordHashNotFound(t *testing.T) {
+	s := openTestDB(t)
+	err := s.UpdatePasswordHash(context.Background(), "missing-id", "newhash")
+	if err != sql.ErrNoRows {
+		t.Fatalf("err=%v", err)
+	}
+}
