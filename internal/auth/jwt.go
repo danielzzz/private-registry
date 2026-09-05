@@ -56,6 +56,10 @@ func NewIssuer(cfg TokenConfig, key *rsa.PrivateKey, cert *x509.Certificate) (*I
 	}, nil
 }
 
+func (i *Issuer) Service() string {
+	return i.cfg.Service
+}
+
 func (i *Issuer) Mint(subject string, access []acl.Scope) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
