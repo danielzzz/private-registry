@@ -102,3 +102,59 @@ func TestGroupMembership(t *testing.T) {
 		t.Fatalf("expected user removed from group, ids=%v", ids)
 	}
 }
+
+func TestGroupsPageRemoveMemberFormURL(t *testing.T) {
+	s := openTestStore(t)
+	adminPass, _ := seedUsers(t, s)
+	h := newTestHandler(t, s)
+	cookie, csrf := adminGroupsSession(t, h, adminPass)
+
+	target, err := s.GetUserByUsername(context.Background(), "user")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := url.Values{
+		"csrf_token": {csrf},
+		"name":       {"developers"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/admin/groups", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("create group status=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	groups, err := s.ListGroups(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	groupID := groups[0].ID
+
+	body = url.Values{
+		"csrf_token": {csrf},
+		"user_id":    {target.ID},
+	}
+	req = httptest.NewRequest(http.MethodPost, "/admin/groups/"+groupID+"/add-member", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("add member status=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/admin/groups", nil)
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("groups page status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	expected := "/admin/groups/" + groupID + "/remove-member"
+	if !strings.Contains(rec.Body.String(), expected) {
+		t.Fatalf("expected remove-member form action %q in page body", expected)
+	}
+}

@@ -94,3 +94,56 @@ func TestCreateAPITokenReturnsPlaintextOnce(t *testing.T) {
 		t.Fatal("plaintext token should not appear on subsequent GET")
 	}
 }
+
+func TestRevokeAPIToken(t *testing.T) {
+	s := openTestStore(t)
+	adminPass, _ := seedUsers(t, s)
+	h := newTestHandler(t, s)
+	cookie, csrf := adminTokensSession(t, h, adminPass)
+
+	admin, err := s.GetUserByUsername(context.Background(), "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := url.Values{
+		"csrf_token": {csrf},
+		"user_id":    {admin.ID},
+		"name":       {"to-revoke"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/admin/tokens", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("create status=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	tokens, err := s.ListAPITokensByUser(context.Background(), admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tokens) != 1 || !tokens[0].Active {
+		t.Fatalf("expected 1 active token, got %+v", tokens)
+	}
+	tokenID := tokens[0].ID
+
+	body = url.Values{"csrf_token": {csrf}}
+	req = httptest.NewRequest(http.MethodPost, "/admin/tokens/"+tokenID+"/revoke", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("revoke status=%d body=%s", rec.Code, rec.Body.String())
+	}
+
+	tokens, err = s.ListAPITokensByUser(context.Background(), admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tokens) != 1 || tokens[0].Active {
+		t.Fatalf("expected revoked token, got %+v", tokens[0])
+	}
+}

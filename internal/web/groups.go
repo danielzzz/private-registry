@@ -30,13 +30,14 @@ var groupsTemplate = template.Must(layoutTemplates.New("groups").Parse(`{{templa
     </section>
 
     {{range .Groups}}
+    {{$g := .}}
     <section class="mt-6 bg-white rounded-lg shadow p-4">
-      <h2 class="text-lg font-semibold text-gray-800">{{.Name}}</h2>
+      <h2 class="text-lg font-semibold text-gray-800">{{$g.Name}}</h2>
       <ul class="mt-3 text-sm text-gray-700 space-y-1">
-        {{range .Members}}
+        {{range $g.Members}}
         <li class="flex items-center gap-3">
           <span>{{.Username}}</span>
-          <form method="POST" action="/admin/groups/{{$.GroupID}}/remove-member" class="inline">
+          <form method="POST" action="/admin/groups/{{$g.GroupID}}/remove-member" class="inline">
             <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
             <input type="hidden" name="user_id" value="{{.ID}}">
             <button class="text-red-600 hover:text-red-800 text-xs" type="submit">Remove</button>
@@ -46,7 +47,7 @@ var groupsTemplate = template.Must(layoutTemplates.New("groups").Parse(`{{templa
         <li class="text-gray-500">No members</li>
         {{end}}
       </ul>
-      <form method="POST" action="/admin/groups/{{.GroupID}}/add-member" class="mt-4 flex flex-wrap gap-3 items-end">
+      <form method="POST" action="/admin/groups/{{$g.GroupID}}/add-member" class="mt-4 flex flex-wrap gap-3 items-end">
         <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Add member</label>
