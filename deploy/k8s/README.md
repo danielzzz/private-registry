@@ -41,6 +41,14 @@ kubectl apply -f deploy/k8s/namespace.yaml \
   -f deploy/k8s/ingress.yaml
 ```
 
+## Auth tokens and startup order
+
+On first boot, auth generates `token.crt` and `token.key` under the PVC (`/data/`).
+
+Apply and start auth first. Wait until it is healthy (`kubectl wait` or `curl .../healthz`) before relying on registry token auth.
+
+If the registry starts before those certs exist, it may fail briefly. Restart the registry pod once auth is healthy; that usually recovers.
+
 ## Single replica only
 
 **Do not scale the auth Deployment beyond 1 replica.** SQLite and the signing key files live on a single `ReadWriteOnce` PVC. Multiple auth pods would corrupt the database or fight over the same files.
