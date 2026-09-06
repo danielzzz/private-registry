@@ -68,6 +68,15 @@ func (s *Store) ListACLRules(ctx context.Context) ([]ACLRule, error) {
 	return rules, nil
 }
 
+func (s *Store) CountACLRules(ctx context.Context) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM acl_rules`).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count acl rules: %w", err)
+	}
+	return n, nil
+}
+
 func (s *Store) UpdateACLRule(ctx context.Context, rule ACLRule) error {
 	subjectID := sql.NullString{String: rule.SubjectID, Valid: rule.SubjectID != ""}
 	res, err := s.db.ExecContext(ctx,

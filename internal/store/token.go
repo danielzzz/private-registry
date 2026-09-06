@@ -59,6 +59,15 @@ func (s *Store) ListAPITokensByUser(ctx context.Context, userID string) ([]APITo
 	return tokens, nil
 }
 
+func (s *Store) CountAPITokens(ctx context.Context) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM api_tokens`).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count api tokens: %w", err)
+	}
+	return n, nil
+}
+
 func (s *Store) RevokeAPIToken(ctx context.Context, id string) error {
 	res, err := s.db.ExecContext(ctx, `UPDATE api_tokens SET active = 0 WHERE id = ?`, id)
 	if err != nil {

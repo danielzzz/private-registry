@@ -37,24 +37,13 @@ func NewHandler(deps Deps) http.Handler {
 	mux.HandleFunc("GET /login", handleLoginGET)
 	mux.Handle("POST /login", loginLimiter.middleware(http.HandlerFunc(handleLoginPOST(sessions, deps.Auth))))
 
-	adminHandler := requireAdmin(deps.Store, sessions, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, ok := userIDFromContext(r)
-		if !ok {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-		user, err := deps.Store.GetUserByID(r.Context(), userID)
-		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = adminTemplate.Execute(w, adminPageData{
-			Username:  user.Username,
-			CSRFToken: csrfFromContext(r),
-		})
-	}))
-	mux.Handle("GET /admin/", adminHandler)
+	mux.Handle("GET /admin/{$}", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleDashboardGET(deps.Store))))
+	mux.Handle("GET /admin/users", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUsersGET(deps.Store))))
+	mux.Handle("POST /admin/users", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUsersPOST(deps.Store))))
+	mux.Handle("POST /admin/users/{id}/disable", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUserDisablePOST(deps.Store))))
+	mux.Handle("POST /admin/users/{id}/enable", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUserEnablePOST(deps.Store))))
+	mux.Handle("POST /admin/users/{id}/toggle-admin", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUserToggleAdminPOST(deps.Store))))
+	mux.Handle("POST /admin/users/{id}/reset-password", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUserResetPasswordPOST(deps.Store))))
 
 	mux.Handle("POST /logout", requireSession(sessions, http.HandlerFunc(handleLogout(sessions))))
 

@@ -76,6 +76,15 @@ func (s *Store) ListGroups(ctx context.Context) ([]Group, error) {
 	return groups, nil
 }
 
+func (s *Store) CountGroups(ctx context.Context) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM groups`).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count groups: %w", err)
+	}
+	return n, nil
+}
+
 func (s *Store) ListGroupIDsForUser(ctx context.Context, userID string) ([]string, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT group_id FROM group_members WHERE user_id = ? ORDER BY group_id`,

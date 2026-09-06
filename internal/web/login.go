@@ -34,36 +34,8 @@ var loginTemplate = template.Must(template.New("login").Parse(`<!DOCTYPE html>
 </body>
 </html>`))
 
-var adminTemplate = template.Must(template.New("admin").Parse(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-  <nav class="bg-white shadow px-6 py-4 flex justify-between items-center">
-    <span class="font-semibold text-gray-800">Private Registry Admin</span>
-    <form method="POST" action="/logout">
-      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-      <button class="text-sm text-gray-600 hover:text-gray-900" type="submit">Logout</button>
-    </form>
-  </nav>
-  <main class="p-6">
-    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-    <p class="mt-2 text-gray-600">Welcome, {{.Username}}.</p>
-  </main>
-</body>
-</html>`))
-
 type loginPageData struct {
 	Error string
-}
-
-type adminPageData struct {
-	Username  string
-	CSRFToken string
 }
 
 func handleLoginGET(w http.ResponseWriter, _ *http.Request) {
