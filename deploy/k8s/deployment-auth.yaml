@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: private-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: <AUTH_IMAGE>
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: HTTP_ADDR
+              value: ":8080"
+            - name: DATABASE_PATH
+              value: /data/registry-auth.db
+            - name: REGISTRY_SERVICE
+              value: registry
+            - name: TOKEN_ISSUER
+              value: registry-auth
+            - name: TOKEN_CERT_PATH
+              value: /data/token.crt
+            - name: TOKEN_KEY_PATH
+              value: /data/token.key
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: registry-auth-secrets
+                  key: ADMIN_USER
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: registry-auth-secrets
+                  key: ADMIN_PASSWORD
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: registry-auth-secrets
+                  key: SESSION_SECRET
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: registry-auth-data

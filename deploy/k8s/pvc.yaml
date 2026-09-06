@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-auth-data
+  namespace: private-registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # Replace with your cluster StorageClass (k3s default: local-path).
+  storageClassName: <STORAGE_CLASS>
+  resources:
+    requests:
+      storage: 1Gi
