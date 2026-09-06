@@ -1,0 +1,20 @@
+version: 0.1
+
+log:
+  level: info
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+
+http:
+  addr: :5000
+
+auth:
+  token:
+    # Realm URL is sent to Docker clients on 401. Use a host-reachable address
+    # for `docker login` from the machine running Compose (not the in-network name).
+    realm: http://127.0.0.1:8080/token
+    service: registry
+    issuer: registry-auth
+    rootcertbundle: /certs/token.crt
