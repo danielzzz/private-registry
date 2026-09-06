@@ -31,18 +31,18 @@ See [deploy/compose/README.md](deploy/compose/README.md) for smoke tests and lay
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_PATH` | yes | — | SQLite database file path |
-| `REGISTRY_SERVICE` | yes | — | Registry service name (`aud` claim; must match registry config `service`) |
-| `TOKEN_ISSUER` | yes | — | JWT issuer (`iss`; must match registry config `issuer`) |
-| `TOKEN_CERT_PATH` | yes | — | Path to RSA signing certificate (PEM) |
-| `TOKEN_KEY_PATH` | yes | — | Path to RSA private key (PEM) |
-| `ADMIN_USER` | no* | — | Bootstrap admin username (first boot only) |
-| `ADMIN_PASSWORD` | no* | — | Bootstrap admin password (first boot only) |
-| `SESSION_SECRET` | no* | — | HMAC secret for admin session cookies |
+| `DATABASE_PATH` | yes | none | SQLite database file path |
+| `REGISTRY_SERVICE` | yes | none | Registry service name (`aud` claim; must match registry config `service`) |
+| `TOKEN_ISSUER` | yes | none | JWT issuer (`iss`; must match registry config `issuer`) |
+| `TOKEN_CERT_PATH` | yes | none | Path to RSA signing certificate (PEM) |
+| `TOKEN_KEY_PATH` | yes | none | Path to RSA private key (PEM) |
+| `ADMIN_USER` | no* | none | Bootstrap admin username (first boot only) |
+| `ADMIN_PASSWORD` | no* | none | Bootstrap admin password (first boot only) |
+| `SESSION_SECRET` | yes | none | HMAC secret for admin session cookies |
 | `HTTP_ADDR` | no | `:8080` | HTTP listen address |
 | `TOKEN_TTL` | no | `300` | Token lifetime in seconds |
 
-\* Required on first boot to create the admin user and session signing key. After bootstrap, only the database and token key paths are needed at runtime.
+\* Required on first boot only to create the bootstrap admin user.
 
 ## ACL repository patterns
 
