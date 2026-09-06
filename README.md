@@ -35,7 +35,7 @@ One script starts the stack, creates a writer and a read-only user, pushes this 
 ./examples/local-demo/demo.sh
 ```
 
-Uses auth on `http://127.0.0.1:18080` and registry on `localhost:5000`. Details: [examples/local-demo/README.md](examples/local-demo/README.md).
+Uses auth on `http://127.0.0.1:18080` and registry on `localhost:5000`. Details and **manual test steps** (login, ACL, tags): [examples/local-demo/README.md](examples/local-demo/README.md).
 
 ## Environment variables
 
