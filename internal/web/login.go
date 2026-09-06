@@ -55,6 +55,12 @@ func handleLoginPOST(sessions *SessionManager, authn *auth.Authenticator) http.H
 			_ = loginTemplate.Execute(w, loginPageData{Error: "Invalid username or password"})
 			return
 		}
+		if !user.Admin {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusForbidden)
+			_ = loginTemplate.Execute(w, loginPageData{Error: "Admin access required. Registry users should use docker login, not this page."})
+			return
+		}
 
 		csrf, err := newCSRFToken()
 		if err != nil {

@@ -1,7 +1,7 @@
 .worktrees/
 
 # Local env and secrets
-deploy/compose/.env
+.env
 deploy/k8s/secret.yaml
 *.pem
 

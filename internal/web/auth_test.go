@@ -115,19 +115,27 @@ func TestLoginSetsSessionCookie(t *testing.T) {
 	}
 }
 
-func TestNonAdminCannotAccessAdmin(t *testing.T) {
+func TestNonAdminCannotLoginToAdmin(t *testing.T) {
 	s := openTestStore(t)
 	_, userPass := seedUsers(t, s)
 	h := newTestHandler(t, s)
-	cookie := login(t, h, "user", userPass)
 
-	req := httptest.NewRequest(http.MethodGet, "/admin/", nil)
-	req.AddCookie(cookie)
+	body := url.Values{"username": {"user"}, "password": {userPass}}
+	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "Admin access required") {
+		t.Fatalf("expected admin access message, body=%s", rec.Body.String())
+	}
+	for _, c := range rec.Result().Cookies() {
+		if c.Name == "session" && c.Value != "" {
+			t.Fatal("non-admin login must not set a session cookie")
+		}
 	}
 }
 

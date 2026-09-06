@@ -10,7 +10,15 @@ From the repo root:
 ./examples/local-demo/demo.sh
 ```
 
-Requirements: Docker Compose v2 and `curl`. If `deploy/compose/.env` is missing, the script copies `.env.example`.
+Requirements: Docker Compose v2 and `curl`.
+
+```bash
+cp examples/local-demo/.env.example examples/local-demo/.env
+# edit ADMIN_USER, ADMIN_PASSWORD, SESSION_SECRET
+./examples/local-demo/demo.sh
+```
+
+If `.env` is missing, `demo.sh` copies `.env.example` for you.
 
 The demo stack uses **auth on port 18080** and **registry on 5000** so it does not collide with a typical app on 8080. Token realm is set in `registry-config.yml` to match.
 
@@ -24,12 +32,13 @@ The demo stack uses **auth on port 18080** and **registry on 5000** so it does n
 
 ## Demo credentials
 
-| User | Password | Access |
-|------|----------|--------|
-| writer | writerpass | push/pull `private-registry/*` |
-| reader | readerpass | pull `private-registry/*` |
+| Where | User | Password | Access |
+|-------|------|----------|--------|
+| Admin UI (`:18080/admin`) | from `.env` (`ADMIN_USER`) | from `.env` (`ADMIN_PASSWORD`) | manage users/ACL |
+| `docker login localhost:5000` | writer | writerpass | push/pull `private-registry/*` |
+| `docker login localhost:5000` | reader | readerpass | pull `private-registry/*` |
 
-Admin remains the bootstrap user from `deploy/compose/.env`.
+`writer` and `reader` are registry users. They cannot sign in to the Admin UI.
 
 ## Stop
 

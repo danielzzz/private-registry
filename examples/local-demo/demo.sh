@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEMO_DIR="$ROOT/examples/local-demo"
-COMPOSE_ENV="$ROOT/deploy/compose/.env"
+COMPOSE_ENV="$DEMO_DIR/.env"
 COMPOSE=(docker compose -p private-registry-demo -f "$DEMO_DIR/docker-compose.yml")
 AUTH_URL="http://127.0.0.1:18080"
 REGISTRY="localhost:5000"
@@ -38,7 +38,7 @@ wait_health() {
 ensure_env() {
   if [[ ! -f "$COMPOSE_ENV" ]]; then
     log "creating $COMPOSE_ENV from .env.example"
-    cp "$ROOT/deploy/compose/.env.example" "$COMPOSE_ENV"
+    cp "$DEMO_DIR/.env.example" "$COMPOSE_ENV"
   fi
 }
 
@@ -94,12 +94,17 @@ main() {
 
 Demo OK.
 
-  Admin UI:  $AUTH_URL/admin  (admin / value from deploy/compose/.env)
-  Registry:  $REGISTRY
-  Image:     $IMAGE
+  Admin UI (admins only):
+    $AUTH_URL/admin
+    user/pass from examples/local-demo/.env (see .env.example)
 
-  Writer:    $WRITER_USER / $WRITER_PASS  (push+pull private-registry/*)
-  Reader:    $READER_USER / $READER_PASS  (pull private-registry/*)
+  Registry docker login (not the Admin UI):
+    docker login $REGISTRY -u $WRITER_USER -p $WRITER_PASS
+    docker login $REGISTRY -u $READER_USER -p $READER_PASS
+
+  Image: $IMAGE
+  Writer: push+pull private-registry/*
+  Reader: pull private-registry/*
 
 Stop stack:
   docker compose -p private-registry-demo -f $DEMO_DIR/docker-compose.yml down
