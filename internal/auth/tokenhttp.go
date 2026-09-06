@@ -52,9 +52,15 @@ func TokenHandler(authn *Authenticator, issuer *Issuer, rules RulesFunc, groups 
 		}
 
 		access := acl.Evaluate(identity, ruleList, requested)
+		// Authenticated clients with no repository scopes (docker login) get an
+		// empty-access token. Requests that asked for repository scopes but got
+		// none granted still return 401.
 		if len(access) == 0 {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
+			if len(requested) > 0 || identity.Anonymous {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			access = []acl.Scope{}
 		}
 
 		token, err := issuer.Mint(subject, access)

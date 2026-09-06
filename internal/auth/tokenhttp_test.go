@@ -235,6 +235,47 @@ func TestTokenHandlerBadPassword(t *testing.T) {
 	}
 }
 
+func TestTokenHandlerAuthenticatedNoScope(t *testing.T) {
+	s := openTestStore(t)
+	ctx := context.Background()
+
+	hash, err := auth.HashPassword("s3cr3t")
+	if err != nil {
+		t.Fatal(err)
+	}
+	user, err := s.CreateUser(ctx, "alice", hash, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h, key := newTokenHandler(t, s)
+	path := "/token?service=" + testService
+	rec := tokenRequest(t, h, path, "alice", "s3cr3t")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())
+	}
+
+	token := parseTokenResponse(t, rec)
+	access := parseJWTAccess(t, key, token)
+	if len(access) != 0 {
+		t.Fatalf("access=%+v want empty for login", access)
+	}
+	claims := parseJWTClaims(t, key, token)
+	if claims["sub"] != user.ID {
+		t.Fatalf("sub=%v want %s", claims["sub"], user.ID)
+	}
+}
+
+func TestTokenHandlerAnonymousNoScopeDenied(t *testing.T) {
+	s := openTestStore(t)
+	h, _ := newTokenHandler(t, s)
+	path := "/token?service=" + testService
+	rec := tokenRequest(t, h, path, "", "")
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())
+	}
+}
+
 func TestTokenHandlerNoScopesAllowed(t *testing.T) {
 	s := openTestStore(t)
 	ctx := context.Background()

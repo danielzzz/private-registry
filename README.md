@@ -27,6 +27,16 @@ Use the `ADMIN_USER` / `ADMIN_PASSWORD` from your `.env`. Create ACL rules in th
 
 See [deploy/compose/README.md](deploy/compose/README.md) for smoke tests and layout details.
 
+### Full local demo (seed users, push, pull)
+
+One script starts the stack, creates a writer and a read-only user, pushes this project's image, and pulls it as the reader:
+
+```bash
+./examples/local-demo/demo.sh
+```
+
+Uses auth on `http://127.0.0.1:18080` and registry on `localhost:5000`. Details: [examples/local-demo/README.md](examples/local-demo/README.md).
+
 ## Environment variables
 
 | Variable | Required | Default | Description |
