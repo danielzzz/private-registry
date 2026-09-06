@@ -45,6 +45,19 @@ func NewHandler(deps Deps) http.Handler {
 	mux.Handle("POST /admin/users/{id}/toggle-admin", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUserToggleAdminPOST(deps.Store))))
 	mux.Handle("POST /admin/users/{id}/reset-password", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleUserResetPasswordPOST(deps.Store))))
 
+	mux.Handle("GET /admin/tokens", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleAPITokensGET(deps.Store))))
+	mux.Handle("POST /admin/tokens", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleAPITokensPOST(deps.Store))))
+	mux.Handle("POST /admin/tokens/{id}/revoke", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleAPITokenRevokePOST(deps.Store))))
+
+	mux.Handle("GET /admin/groups", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleGroupsGET(deps.Store))))
+	mux.Handle("POST /admin/groups", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleGroupsPOST(deps.Store))))
+	mux.Handle("POST /admin/groups/{id}/add-member", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleGroupAddMemberPOST(deps.Store))))
+	mux.Handle("POST /admin/groups/{id}/remove-member", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleGroupRemoveMemberPOST(deps.Store))))
+
+	mux.Handle("GET /admin/acl", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleACLRulesGET(deps.Store))))
+	mux.Handle("POST /admin/acl", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleACLRulesPOST(deps.Store))))
+	mux.Handle("POST /admin/acl/{id}/delete", requireAdmin(deps.Store, sessions, http.HandlerFunc(handleACLRuleDeletePOST(deps.Store))))
+
 	mux.Handle("POST /logout", requireSession(sessions, http.HandlerFunc(handleLogout(sessions))))
 
 	return withSession(sessions, mux)
