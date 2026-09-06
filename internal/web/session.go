@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"errors"
 	"net/http"
 	"strings"
 )
@@ -99,5 +98,3 @@ func userIDFromContext(r *http.Request) (string, bool) {
 	id, ok := v.(string)
 	return id, ok && id != ""
 }
-
-var errForbidden = errors.New("forbidden")

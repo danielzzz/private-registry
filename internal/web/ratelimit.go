@@ -1,6 +1,7 @@
 package web
 
 import (
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -47,7 +48,7 @@ func (rl *rateLimiter) allow(key string) bool {
 func (rl *rateLimiter) middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := r.RemoteAddr
-		if host, _, err := splitHostPort(ip); err == nil {
+		if host, _, err := net.SplitHostPort(ip); err == nil {
 			ip = host
 		}
 		if !rl.allow(ip) {
@@ -56,17 +57,4 @@ func (rl *rateLimiter) middleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-func splitHostPort(addr string) (host, port string, err error) {
-	// httptest uses "127.0.0.1:12345" or "[::1]:12345"
-	for i := len(addr) - 1; i >= 0; i-- {
-		if addr[i] == ':' {
-			return addr[:i], addr[i+1:], nil
-		}
-		if addr[i] == ']' {
-			break
-		}
-	}
-	return addr, "", nil
 }

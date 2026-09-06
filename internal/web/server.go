@@ -99,6 +99,11 @@ func requireAdmin(st *store.Store, sessions *SessionManager, next http.Handler) 
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
+		if !user.Active {
+			sessions.Clear(w)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
 		if !user.Admin {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return

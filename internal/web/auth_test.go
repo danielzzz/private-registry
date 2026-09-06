@@ -212,6 +212,58 @@ func TestUnauthenticatedAdminRedirectsToLogin(t *testing.T) {
 	}
 }
 
+func TestLoginRateLimit(t *testing.T) {
+	s := openTestStore(t)
+	seedUsers(t, s)
+	h := newTestHandler(t, s)
+
+	body := url.Values{"username": {"admin"}, "password": {"wrong-password"}}
+	for i := 0; i < 20; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(body.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if rec.Code == http.StatusTooManyRequests {
+			t.Fatalf("request %d should not be rate limited", i+1)
+		}
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected 429 on 21st request, got %d body=%s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestInactiveAdminCannotAccessAdmin(t *testing.T) {
+	s := openTestStore(t)
+	adminPass, _ := seedUsers(t, s)
+	h := newTestHandler(t, s)
+	cookie := login(t, h, "admin", adminPass)
+
+	admin, err := s.GetUserByUsername(context.Background(), "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SetUserActive(context.Background(), admin.ID, false); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	if rec.Header().Get("Location") != "/login" {
+		t.Fatalf("location=%q", rec.Header().Get("Location"))
+	}
+}
+
 func TestLoginPageRenders(t *testing.T) {
 	s := openTestStore(t)
 	seedUsers(t, s)
