@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 
 	"github.com/danielzelisko/private-registry/internal/auth"
 	"github.com/danielzelisko/private-registry/internal/store"
@@ -136,13 +135,14 @@ func handleAPITokensGET(st *store.Store) http.HandlerFunc {
 		if msg := r.URL.Query().Get("error"); msg != "" {
 			data.Error = msg
 		}
-		if created := r.URL.Query().Get("created"); created != "" {
-			data.CreatedToken = created
-		}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = apiTokensTemplate.Execute(w, data)
+		renderAPITokensPage(w, data)
 	}
+}
+
+func renderAPITokensPage(w http.ResponseWriter, data apiTokensPageData) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_ = apiTokensTemplate.Execute(w, data)
 }
 
 func handleAPITokensPOST(st *store.Store) http.HandlerFunc {
@@ -156,9 +156,9 @@ func handleAPITokensPOST(st *store.Store) http.HandlerFunc {
 			return
 		}
 
-		userID := r.FormValue("user_id")
+		tokenUserID := r.FormValue("user_id")
 		name := r.FormValue("name")
-		if userID == "" || name == "" {
+		if tokenUserID == "" || name == "" {
 			http.Redirect(w, r, "/admin/tokens?error=User+and+name+required", http.StatusSeeOther)
 			return
 		}
@@ -174,14 +174,46 @@ func handleAPITokensPOST(st *store.Store) http.HandlerFunc {
 			return
 		}
 
-		tokenID, err := st.CreateAPIToken(r.Context(), userID, name, hash, nil)
+		tokenID, err := st.CreateAPIToken(r.Context(), tokenUserID, name, hash, nil)
 		if err != nil {
 			http.Redirect(w, r, "/admin/tokens?error=Could+not+create+token", http.StatusSeeOther)
 			return
 		}
 
 		plaintext := fmt.Sprintf("prt_%s_%s", tokenID, secret)
-		http.Redirect(w, r, "/admin/tokens?created="+url.QueryEscape(plaintext), http.StatusSeeOther)
+
+		sessionUserID, ok := userIDFromContext(r)
+		if !ok {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		user, err := st.GetUserByID(r.Context(), sessionUserID)
+		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		users, err := st.ListUsers(r.Context())
+		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		tokens, err := listAllTokens(r.Context(), st, users)
+		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		renderAPITokensPage(w, apiTokensPageData{
+			layoutData: layoutData{
+				Title:      "API Tokens",
+				Username:   user.Username,
+				CSRFToken:  csrfFromContext(r),
+				ActivePage: "tokens",
+			},
+			Users:        users,
+			Tokens:       tokens,
+			CreatedToken: plaintext,
+		})
 	}
 }
 

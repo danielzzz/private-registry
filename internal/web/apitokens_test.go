@@ -53,14 +53,13 @@ func TestCreateAPITokenReturnsPlaintextOnce(t *testing.T) {
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
-	if rec.Code != http.StatusSeeOther {
+	if rec.Code != http.StatusOK {
 		t.Fatalf("create status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
-	loc := rec.Header().Get("Location")
-	m := apiTokenPlaintextRE.FindString(loc)
+	m := apiTokenPlaintextRE.FindString(rec.Body.String())
 	if m == "" {
-		t.Fatalf("expected plaintext token in redirect location, got %q", loc)
+		t.Fatalf("expected plaintext token in response body, got %q", rec.Body.String())
 	}
 
 	parts := strings.SplitN(strings.TrimPrefix(m, "prt_"), "_", 2)
@@ -116,7 +115,7 @@ func TestRevokeAPIToken(t *testing.T) {
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
-	if rec.Code != http.StatusSeeOther {
+	if rec.Code != http.StatusOK {
 		t.Fatalf("create status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
