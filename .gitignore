@@ -1,1 +1,2 @@
 .worktrees/
+deploy/compose/.env
