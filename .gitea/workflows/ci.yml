@@ -9,15 +9,15 @@ on:
 env:
   REGISTRY: registry.zelisko.net
   IMAGE_NAME: private-registry/auth
-  GOMODCACHE: /var/cache/good-agent/private-registry/gomod
-  GOCACHE: /var/cache/good-agent/private-registry/gocache
+  GOMODCACHE: /var/cache/private-registry/gomod
+  GOCACHE: /var/cache/private-registry/gocache
 
 jobs:
   test:
     runs-on: docker
     container:
       image: catthehacker/ubuntu:act-22.04
-      options: -v /var/cache/good-agent/private-registry:/var/cache/good-agent/private-registry
+      options: -v /var/cache/private-registry:/var/cache/private-registry
     steps:
       - uses: actions/checkout@v4
 
