@@ -115,6 +115,39 @@ func TestCreateAnonymousACLRule(t *testing.T) {
 	}
 }
 
+func TestRejectAnonymousPushACLRule(t *testing.T) {
+	s := openTestStore(t)
+	adminPass, _ := seedUsers(t, s)
+	h := newTestHandler(t, s)
+	cookie, csrf := adminACLRulesSession(t, h, adminPass)
+
+	body := url.Values{
+		"csrf_token":   {csrf},
+		"subject_kind": {"anonymous"},
+		"pattern":      {"public/*"},
+		"action":       {"push"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/admin/acl", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("create anonymous push acl status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Header().Get("Location"), "error=") {
+		t.Fatalf("expected error redirect, got %q", rec.Header().Get("Location"))
+	}
+
+	rules, err := s.ListACLRules(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rules) != 0 {
+		t.Fatalf("expected 0 rules, got %d", len(rules))
+	}
+}
+
 func TestDeleteACLRule(t *testing.T) {
 	s := openTestStore(t)
 	adminPass, _ := seedUsers(t, s)

@@ -48,7 +48,7 @@ var aclRulesTemplate = template.Must(layoutTemplates.New("aclrules").Parse(`{{te
             <label class="block text-sm text-gray-600 mb-1" for="action">Action</label>
             <select class="border border-gray-300 rounded px-3 py-2" id="action" name="action" required>
               <option value="pull">pull</option>
-              <option value="push">push</option>
+              <option value="push" id="action-push">push</option>
             </select>
           </div>
           <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" type="submit">Create</button>
@@ -84,6 +84,23 @@ var aclRulesTemplate = template.Must(layoutTemplates.New("aclrules").Parse(`{{te
       </table>
     </section>
   </main>
+  <script>
+    (function () {
+      var subjectKind = document.getElementById('subject_kind');
+      var action = document.getElementById('action');
+      var pushOption = document.getElementById('action-push');
+      function syncActionOptions() {
+        var anonymous = subjectKind.value === 'anonymous';
+        pushOption.hidden = anonymous;
+        pushOption.disabled = anonymous;
+        if (anonymous && action.value === 'push') {
+          action.value = 'pull';
+        }
+      }
+      subjectKind.addEventListener('change', syncActionOptions);
+      syncActionOptions();
+    })();
+  </script>
 {{template "foot" .}}`))
 
 type aclRuleRow struct {
@@ -176,6 +193,10 @@ func handleACLRulesPOST(st *store.Store) http.HandlerFunc {
 		}
 		if subjectKind == acl.SubjectAnonymous {
 			subjectID = ""
+			if action == acl.ActionPush {
+				http.Redirect(w, r, "/admin/acl?error=Anonymous+push+is+not+allowed", http.StatusSeeOther)
+				return
+			}
 		} else if subjectID == "" {
 			http.Redirect(w, r, "/admin/acl?error=Subject+required", http.StatusSeeOther)
 			return

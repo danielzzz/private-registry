@@ -36,6 +36,9 @@ func evaluateRules(id Identity, rules []Rule, name string) (grantedPull, granted
 		case ActionPull:
 			grantedPull = true
 		case ActionPush:
+			if id.Anonymous {
+				continue
+			}
 			grantedPull = true
 			grantedPush = true
 		}

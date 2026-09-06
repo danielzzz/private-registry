@@ -101,3 +101,17 @@ func TestEvaluate_DenyByOmission(t *testing.T) {
 		t.Fatalf("got=%v", got)
 	}
 }
+
+func TestEvaluate_AnonymousPushDenied(t *testing.T) {
+	rules := []acl.Rule{{
+		SubjectKind: acl.SubjectAnonymous,
+		Pattern:     "public/*",
+		Action:      acl.ActionPush,
+	}}
+	got := acl.Evaluate(acl.Identity{Anonymous: true}, rules, []acl.Scope{
+		{Type: "repository", Name: "public/foo", Actions: []string{"push", "pull"}},
+	})
+	if len(got) != 0 {
+		t.Fatalf("anonymous push should be denied, got=%v", got)
+	}
+}
