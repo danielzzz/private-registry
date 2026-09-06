@@ -38,6 +38,18 @@ func (s *Store) CreateUser(ctx context.Context, username, passwordHash string, a
 	}, nil
 }
 
+func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
+	row := s.db.QueryRowContext(ctx,
+		`SELECT id, username, password_hash, active, admin FROM users WHERE id = ?`,
+		id,
+	)
+	u, err := scanUser(row)
+	if err != nil {
+		return User{}, err
+	}
+	return u, nil
+}
+
 func (s *Store) GetUserByUsername(ctx context.Context, username string) (User, error) {
 	row := s.db.QueryRowContext(ctx,
 		`SELECT id, username, password_hash, active, admin FROM users WHERE username = ?`,

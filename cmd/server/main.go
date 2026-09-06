@@ -18,6 +18,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
+	if cfg.SessionSecret == "" {
+		log.Fatal("SESSION_SECRET is required")
+	}
 
 	s, err := store.Open(cfg.DatabasePath)
 	if err != nil {
@@ -65,7 +68,12 @@ func main() {
 	}
 	tokenHandler := auth.TokenHandler(authn, issuer, rulesFn, s.ListGroupIDsForUser)
 
-	handler := web.NewHandler(web.Deps{Token: tokenHandler})
+	handler := web.NewHandler(web.Deps{
+		SessionSecret: cfg.SessionSecret,
+		Auth:          authn,
+		Store:         s,
+		Token:         tokenHandler,
+	})
 	log.Printf("listening on %s", cfg.HTTPAddr)
 	log.Fatal(http.ListenAndServe(cfg.HTTPAddr, handler))
 }
