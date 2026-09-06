@@ -13,21 +13,21 @@ var dashboardTemplate = template.Must(layoutTemplates.New("dashboard").Parse(`{{
     <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
     <p class="mt-2 text-gray-600">Welcome, {{.Username}}.</p>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="bg-white rounded-lg shadow p-4" data-dashboard-tile="users">
         <p class="text-sm text-gray-500">Users</p>
-        <p class="text-2xl font-bold text-gray-800">{{.UserCount}}</p>
+        <p class="text-2xl font-bold text-gray-800" data-dashboard-count="users">{{.UserCount}}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="bg-white rounded-lg shadow p-4" data-dashboard-tile="groups">
         <p class="text-sm text-gray-500">Groups</p>
-        <p class="text-2xl font-bold text-gray-800">{{.GroupCount}}</p>
+        <p class="text-2xl font-bold text-gray-800" data-dashboard-count="groups">{{.GroupCount}}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="bg-white rounded-lg shadow p-4" data-dashboard-tile="tokens">
         <p class="text-sm text-gray-500">API Tokens</p>
-        <p class="text-2xl font-bold text-gray-800">{{.TokenCount}}</p>
+        <p class="text-2xl font-bold text-gray-800" data-dashboard-count="tokens">{{.TokenCount}}</p>
       </div>
-      <div class="bg-white rounded-lg shadow p-4">
+      <div class="bg-white rounded-lg shadow p-4" data-dashboard-tile="acl">
         <p class="text-sm text-gray-500">ACL Rules</p>
-        <p class="text-2xl font-bold text-gray-800">{{.ACLRuleCount}}</p>
+        <p class="text-2xl font-bold text-gray-800" data-dashboard-count="acl">{{.ACLRuleCount}}</p>
       </div>
     </div>
     <p class="mt-6 text-sm text-gray-500">Configure your registry to use this service as its token auth realm.</p>
