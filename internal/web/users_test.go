@@ -283,3 +283,69 @@ func TestResetUserPassword(t *testing.T) {
 		t.Fatal("expected password hash to match new password")
 	}
 }
+
+func TestCannotDisableLastActiveAdmin(t *testing.T) {
+	s := openTestStore(t)
+	adminPass, _ := seedUsers(t, s)
+	h := newTestHandler(t, s)
+	cookie, csrf := adminSession(t, h, adminPass)
+
+	admin, err := s.GetUserByUsername(context.Background(), "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := url.Values{"csrf_token": {csrf}}
+	req := httptest.NewRequest(http.MethodPost, "/admin/users/"+admin.ID+"/disable", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("disable status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Header().Get("Location"), "error=") {
+		t.Fatalf("expected error redirect, got %q", rec.Header().Get("Location"))
+	}
+
+	updated, err := s.GetUserByID(context.Background(), admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.Active || !updated.Admin {
+		t.Fatal("expected admin to remain active")
+	}
+}
+
+func TestCannotRemoveLastActiveAdmin(t *testing.T) {
+	s := openTestStore(t)
+	adminPass, _ := seedUsers(t, s)
+	h := newTestHandler(t, s)
+	cookie, csrf := adminSession(t, h, adminPass)
+
+	admin, err := s.GetUserByUsername(context.Background(), "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := url.Values{"csrf_token": {csrf}}
+	req := httptest.NewRequest(http.MethodPost, "/admin/users/"+admin.ID+"/toggle-admin", strings.NewReader(body.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("toggle-admin status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Header().Get("Location"), "error=") {
+		t.Fatalf("expected error redirect, got %q", rec.Header().Get("Location"))
+	}
+
+	updated, err := s.GetUserByID(context.Background(), admin.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !updated.Admin {
+		t.Fatal("expected admin to remain admin")
+	}
+}

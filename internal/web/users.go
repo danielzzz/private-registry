@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -168,9 +169,27 @@ func handleUsersPOST(st *store.Store) http.HandlerFunc {
 }
 
 func handleUserDisablePOST(st *store.Store) http.HandlerFunc {
-	return userActionPOST(st, func(ctx context.Context, st *store.Store, id string) error {
-		return st.SetUserActive(ctx, id, false)
-	}, "User+disabled")
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if !validateCSRF(r) {
+			http.Error(w, "invalid csrf token", http.StatusForbidden)
+			return
+		}
+
+		id := r.PathValue("id")
+		if err := guardLastActiveAdmin(r.Context(), st, id); err != nil {
+			http.Redirect(w, r, "/admin/users?error=Cannot+disable+the+last+active+admin", http.StatusSeeOther)
+			return
+		}
+		if err := st.SetUserActive(r.Context(), id, false); err != nil {
+			http.Redirect(w, r, "/admin/users?error=Could+not+update+user", http.StatusSeeOther)
+			return
+		}
+		http.Redirect(w, r, "/admin/users?success=User+disabled", http.StatusSeeOther)
+	}
 }
 
 func handleUserEnablePOST(st *store.Store) http.HandlerFunc {
@@ -195,6 +214,13 @@ func handleUserToggleAdminPOST(st *store.Store) http.HandlerFunc {
 		if err != nil {
 			http.Redirect(w, r, "/admin/users?error=User+not+found", http.StatusSeeOther)
 			return
+		}
+
+		if u.Admin {
+			if err := guardLastActiveAdmin(r.Context(), st, id); err != nil {
+				http.Redirect(w, r, "/admin/users?error=Cannot+remove+the+last+active+admin", http.StatusSeeOther)
+				return
+			}
 		}
 
 		if err := st.SetUserAdmin(r.Context(), id, !u.Admin); err != nil {
@@ -235,6 +261,25 @@ func handleUserResetPasswordPOST(st *store.Store) http.HandlerFunc {
 		}
 		http.Redirect(w, r, "/admin/users?success=Password+reset", http.StatusSeeOther)
 	}
+}
+
+// guardLastActiveAdmin returns an error when the target is the only active admin.
+func guardLastActiveAdmin(ctx context.Context, st *store.Store, targetID string) error {
+	u, err := st.GetUserByID(ctx, targetID)
+	if err != nil {
+		return err
+	}
+	if !u.Active || !u.Admin {
+		return nil
+	}
+	n, err := st.CountActiveAdmins(ctx)
+	if err != nil {
+		return err
+	}
+	if n <= 1 {
+		return fmt.Errorf("last active admin")
+	}
+	return nil
 }
 
 type userAction func(ctx context.Context, st *store.Store, id string) error

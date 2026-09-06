@@ -71,6 +71,15 @@ func (s *Store) CountUsers(ctx context.Context) (int, error) {
 	return n, nil
 }
 
+func (s *Store) CountActiveAdmins(ctx context.Context) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM users WHERE active = 1 AND admin = 1`).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("count active admins: %w", err)
+	}
+	return n, nil
+}
+
 func (s *Store) SetUserActive(ctx context.Context, id string, active bool) error {
 	return s.updateUserField(ctx, id, "active", boolToInt(active))
 }
