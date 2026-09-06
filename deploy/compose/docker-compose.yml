@@ -2,7 +2,7 @@ services:
   auth:
     build:
       context: ../..
-      dockerfile: deploy/compose/Dockerfile
+      dockerfile: Dockerfile
     env_file: .env
     environment:
       HTTP_ADDR: :8080

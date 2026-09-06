@@ -72,9 +72,15 @@ docker login localhost:5000 -u myuser -p 'prt_abc123_...'
 
 The token endpoint and `docker login` accept the same credentials.
 
+## CI and container image
+
+Gitea Actions (`.gitea/workflows/ci.yml`) runs `go test ./...` on every push/PR, and on `main` builds and pushes:
+
+`registry.zelisko.net/private-registry/auth:main-<unix>-<sha>`
+
 ## Kubernetes (k3s)
 
-Raw manifests for a single-replica stack live in [deploy/k8s/](deploy/k8s/). See [deploy/k8s/README.md](deploy/k8s/README.md) for install steps.
+Raw manifests for a single-replica stack live in [deploy/k8s/](deploy/k8s/). See [deploy/k8s/README.md](deploy/k8s/README.md) for install steps. Use the published image above for `<AUTH_IMAGE>`.
 
 **Do not scale the auth Deployment beyond 1 replica.** SQLite and the signing key files live on a single `ReadWriteOnce` PVC; multiple auth pods would corrupt the database or contend for the same key files.
 

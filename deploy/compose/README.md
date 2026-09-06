@@ -63,7 +63,7 @@ Auth listens on `http://127.0.0.1:8080`, registry on `localhost:5000`.
 |------|---------|
 | `docker-compose.yml` | `auth` and `registry` services |
 | `registry-config.yml` | Registry token auth (realm, issuer, root cert) |
-| `Dockerfile` | Multi-stage build for the Go auth server |
+| `../../Dockerfile` | Multi-stage build for the Go auth server |
 | `.env.example` | Required env vars |
 
 Shared volume `certs`: auth generates `token.crt` / `token.key` on first boot; registry reads the cert as `rootcertbundle`.
