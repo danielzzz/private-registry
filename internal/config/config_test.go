@@ -44,6 +44,30 @@ func TestLoadRequiresDatabasePath(t *testing.T) {
 	}
 }
 
+func TestLoadRequiresFields(t *testing.T) {
+	tests := []struct {
+		name string
+		unset string
+	}{
+		{name: "REGISTRY_SERVICE", unset: "REGISTRY_SERVICE"},
+		{name: "TOKEN_ISSUER", unset: "TOKEN_ISSUER"},
+		{name: "TOKEN_CERT_PATH", unset: "TOKEN_CERT_PATH"},
+		{name: "TOKEN_KEY_PATH", unset: "TOKEN_KEY_PATH"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setRequiredEnv(t)
+			t.Setenv(tt.unset, "")
+
+			_, err := config.Load()
+			if err == nil {
+				t.Fatalf("expected error for missing %s", tt.name)
+			}
+		})
+	}
+}
+
 func TestLoadTokenTTLOverride(t *testing.T) {
 	setRequiredEnv(t)
 	t.Setenv("TOKEN_TTL", "600")

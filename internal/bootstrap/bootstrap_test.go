@@ -2,6 +2,7 @@ package bootstrap_test
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 
@@ -26,6 +27,9 @@ func TestEnsureAdminRequiresCredentialsOnEmptyDB(t *testing.T) {
 	err := bootstrap.EnsureAdmin(context.Background(), s, "", "")
 	if err == nil {
 		t.Fatal("expected error when admin credentials missing on empty DB")
+	}
+	if !errors.Is(err, bootstrap.ErrAdminCredentialsRequired) {
+		t.Fatalf("expected ErrAdminCredentialsRequired, got %v", err)
 	}
 }
 
