@@ -1,2 +1,18 @@
 .worktrees/
+
+# Local env and secrets
 deploy/compose/.env
+deploy/k8s/secret.yaml
+*.pem
+
+# Runtime data
+data/
+*.db
+*.db-*
+
+# Build artifacts
+/server
+/bin/
+/dist/
+*.exe
+*.test
