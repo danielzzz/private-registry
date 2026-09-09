@@ -1,8 +1,8 @@
 # private-registry
 
-Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite or MySQL, and serves `/token` for the registry plus `/admin` for management.  
-  
-You can use it if you want simple way limit access to your private docker registry.
+Self-hosted **private registry** for Docker: Registry v2 (registry2) with token **registry auth** and an HTMX admin **UI**.
+
+Use it when you want a simple way to run a private Docker registry and control who can pull and push. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite or MySQL, and serves `/token` for the registry plus `/admin` for management.
 
 ## Screenshots
 
