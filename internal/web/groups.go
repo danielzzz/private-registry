@@ -83,7 +83,7 @@ type groupsPageData struct {
 	Success string
 }
 
-func handleGroupsGET(st *store.Store) http.HandlerFunc {
+func handleGroupsGET(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := userIDFromContext(r)
 		if !ok {
@@ -134,7 +134,7 @@ func handleGroupsGET(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleGroupsPOST(st *store.Store) http.HandlerFunc {
+func handleGroupsPOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -159,17 +159,21 @@ func handleGroupsPOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleGroupAddMemberPOST(st *store.Store) http.HandlerFunc {
-	return groupMemberActionPOST(st, st.AddMember, "Member+added")
+func handleGroupAddMemberPOST(st store.Store) http.HandlerFunc {
+	return groupMemberActionPOST(st, func(ctx context.Context, groupID, userID string) error {
+		return st.AddMember(ctx, groupID, userID)
+	}, "Member+added")
 }
 
-func handleGroupRemoveMemberPOST(st *store.Store) http.HandlerFunc {
-	return groupMemberActionPOST(st, st.RemoveMember, "Member+removed")
+func handleGroupRemoveMemberPOST(st store.Store) http.HandlerFunc {
+	return groupMemberActionPOST(st, func(ctx context.Context, groupID, userID string) error {
+		return st.RemoveMember(ctx, groupID, userID)
+	}, "Member+removed")
 }
 
 type groupMemberAction func(ctx context.Context, groupID, userID string) error
 
-func groupMemberActionPOST(st *store.Store, action groupMemberAction, successMsg string) http.HandlerFunc {
+func groupMemberActionPOST(st store.Store, action groupMemberAction, successMsg string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -195,7 +199,7 @@ func groupMemberActionPOST(st *store.Store, action groupMemberAction, successMsg
 	}
 }
 
-func buildGroupViews(ctx context.Context, st *store.Store, groups []store.Group, users []store.User) ([]groupView, error) {
+func buildGroupViews(ctx context.Context, st store.Store, groups []store.Group, users []store.User) ([]groupView, error) {
 	membersByGroup := make(map[string][]groupMember)
 	for _, u := range users {
 		groupIDs, err := st.ListGroupIDsForUser(ctx, u.ID)

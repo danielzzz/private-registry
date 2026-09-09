@@ -1,4 +1,4 @@
-package store
+package sqlite
 
 const schema = `
 CREATE TABLE IF NOT EXISTS users (

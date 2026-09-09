@@ -9,7 +9,7 @@ import (
 	"github.com/danielzelisko/private-registry/internal/auth"
 	"github.com/danielzelisko/private-registry/internal/bootstrap"
 	"github.com/danielzelisko/private-registry/internal/config"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzelisko/private-registry/internal/store/factory"
 	"github.com/danielzelisko/private-registry/internal/web"
 )
 
@@ -22,7 +22,7 @@ func main() {
 		log.Fatal("SESSION_SECRET is required")
 	}
 
-	s, err := store.Open(cfg.DatabasePath)
+	s, err := factory.Open(cfg.DatabaseDriver, cfg.DatabasePath, cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("database: %v", err)
 	}

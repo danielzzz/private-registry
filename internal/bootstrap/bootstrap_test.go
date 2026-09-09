@@ -9,12 +9,13 @@ import (
 	"github.com/danielzelisko/private-registry/internal/auth"
 	"github.com/danielzelisko/private-registry/internal/bootstrap"
 	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzelisko/private-registry/internal/store/sqlite"
 )
 
-func openTestDB(t *testing.T) *store.Store {
+func openTestDB(t *testing.T) store.Store {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.db")
-	s, err := store.Open(path)
+	s, err := sqlite.Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}

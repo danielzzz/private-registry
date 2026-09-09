@@ -1,4 +1,4 @@
-package store_test
+package sqlite_test
 
 import (
 	"context"
@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzelisko/private-registry/internal/store/sqlite"
 )
 
-func openTestDB(t *testing.T) *store.Store {
+func openTestDB(t *testing.T) store.Store {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.db")
-	s, err := store.Open(path)
+	s, err := sqlite.Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}

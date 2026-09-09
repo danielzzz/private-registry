@@ -95,7 +95,7 @@ type apiTokensPageData struct {
 	CreatedToken string
 }
 
-func handleAPITokensGET(st *store.Store) http.HandlerFunc {
+func handleAPITokensGET(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := userIDFromContext(r)
 		if !ok {
@@ -145,7 +145,7 @@ func renderAPITokensPage(w http.ResponseWriter, data apiTokensPageData) {
 	_ = apiTokensTemplate.Execute(w, data)
 }
 
-func handleAPITokensPOST(st *store.Store) http.HandlerFunc {
+func handleAPITokensPOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -217,7 +217,7 @@ func handleAPITokensPOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleAPITokenRevokePOST(st *store.Store) http.HandlerFunc {
+func handleAPITokenRevokePOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -237,7 +237,7 @@ func handleAPITokenRevokePOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func listAllTokens(ctx context.Context, st *store.Store, users []store.User) ([]tokenRow, error) {
+func listAllTokens(ctx context.Context, st store.Store, users []store.User) ([]tokenRow, error) {
 	usernames := make(map[string]string, len(users))
 	for _, u := range users {
 		usernames[u.ID] = u.Username

@@ -1,29 +1,26 @@
-package store
+package sqlite
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/danielzelisko/private-registry/internal/store"
 )
 
-type Group struct {
-	ID   string
-	Name string
-}
-
-func (s *Store) CreateGroup(ctx context.Context, name string) (Group, error) {
-	id, err := newID()
+func (s *Store) CreateGroup(ctx context.Context, name string) (store.Group, error) {
+	id, err := store.NewID()
 	if err != nil {
-		return Group{}, err
+		return store.Group{}, err
 	}
 	_, err = s.db.ExecContext(ctx,
 		`INSERT INTO groups (id, name) VALUES (?, ?)`,
 		id, name,
 	)
 	if err != nil {
-		return Group{}, fmt.Errorf("create group: %w", err)
+		return store.Group{}, fmt.Errorf("create group: %w", err)
 	}
-	return Group{ID: id, Name: name}, nil
+	return store.Group{ID: id, Name: name}, nil
 }
 
 func (s *Store) AddMember(ctx context.Context, groupID, userID string) error {
@@ -55,16 +52,16 @@ func (s *Store) RemoveMember(ctx context.Context, groupID, userID string) error 
 	return nil
 }
 
-func (s *Store) ListGroups(ctx context.Context) ([]Group, error) {
+func (s *Store) ListGroups(ctx context.Context) ([]store.Group, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT id, name FROM groups ORDER BY name`)
 	if err != nil {
 		return nil, fmt.Errorf("list groups: %w", err)
 	}
 	defer rows.Close()
 
-	var groups []Group
+	var groups []store.Group
 	for rows.Next() {
-		var g Group
+		var g store.Group
 		if err := rows.Scan(&g.ID, &g.Name); err != nil {
 			return nil, fmt.Errorf("scan group: %w", err)
 		}

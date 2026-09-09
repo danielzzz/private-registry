@@ -42,7 +42,7 @@ type dashboardPageData struct {
 	ACLRuleCount int
 }
 
-func handleDashboardGET(st *store.Store) http.HandlerFunc {
+func handleDashboardGET(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := userIDFromContext(r)
 		if !ok {

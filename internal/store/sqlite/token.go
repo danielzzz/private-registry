@@ -1,23 +1,16 @@
-package store
+package sqlite
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/danielzelisko/private-registry/internal/store"
 )
 
-type APIToken struct {
-	ID        string
-	UserID    string
-	Name      string
-	TokenHash string
-	ExpiresAt *time.Time
-	Active    bool
-}
-
 func (s *Store) CreateAPIToken(ctx context.Context, userID, name, hash string, expiresAt *time.Time) (string, error) {
-	id, err := newID()
+	id, err := store.NewID()
 	if err != nil {
 		return "", err
 	}
@@ -35,7 +28,7 @@ func (s *Store) CreateAPIToken(ctx context.Context, userID, name, hash string, e
 	return id, nil
 }
 
-func (s *Store) ListAPITokensByUser(ctx context.Context, userID string) ([]APIToken, error) {
+func (s *Store) ListAPITokensByUser(ctx context.Context, userID string) ([]store.APIToken, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, user_id, name, token_hash, expires_at, active FROM api_tokens WHERE user_id = ? ORDER BY name`,
 		userID,
@@ -45,7 +38,7 @@ func (s *Store) ListAPITokensByUser(ctx context.Context, userID string) ([]APITo
 	}
 	defer rows.Close()
 
-	var tokens []APIToken
+	var tokens []store.APIToken
 	for rows.Next() {
 		t, err := scanAPIToken(rows)
 		if err != nil {
@@ -83,13 +76,13 @@ func (s *Store) RevokeAPIToken(ctx context.Context, id string) error {
 	return nil
 }
 
-func scanAPIToken(row rowScanner) (APIToken, error) {
-	var t APIToken
+func scanAPIToken(row rowScanner) (store.APIToken, error) {
+	var t store.APIToken
 	var expires sql.NullInt64
 	var active int
 	err := row.Scan(&t.ID, &t.UserID, &t.Name, &t.TokenHash, &expires, &active)
 	if err != nil {
-		return APIToken{}, fmt.Errorf("scan api token: %w", err)
+		return store.APIToken{}, fmt.Errorf("scan api token: %w", err)
 	}
 	t.Active = active != 0
 	if expires.Valid {

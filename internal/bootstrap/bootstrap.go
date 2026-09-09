@@ -11,7 +11,7 @@ import (
 
 var ErrAdminCredentialsRequired = errors.New("ADMIN_USER and ADMIN_PASSWORD are required when the database has no users")
 
-func EnsureAdmin(ctx context.Context, s *store.Store, adminUser, adminPassword string) error {
+func EnsureAdmin(ctx context.Context, s store.Store, adminUser, adminPassword string) error {
 	count, err := s.CountUsers(ctx)
 	if err != nil {
 		return fmt.Errorf("count users: %w", err)

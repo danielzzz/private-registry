@@ -1,4 +1,4 @@
-package store
+package sqlite
 
 import (
 	"context"
@@ -6,27 +6,13 @@ import (
 	"fmt"
 
 	"github.com/danielzelisko/private-registry/internal/acl"
+	"github.com/danielzelisko/private-registry/internal/store"
 )
 
-type ACLRule struct {
-	ID          string
-	SubjectKind acl.SubjectKind
-	SubjectID   string
-	Pattern     string
-	Action      acl.Action
-}
-
-type ACLRuleInput struct {
-	SubjectKind acl.SubjectKind
-	SubjectID   string
-	Pattern     string
-	Action      acl.Action
-}
-
-func (s *Store) CreateACLRule(ctx context.Context, input ACLRuleInput) (ACLRule, error) {
-	id, err := newID()
+func (s *Store) CreateACLRule(ctx context.Context, input store.ACLRuleInput) (store.ACLRule, error) {
+	id, err := store.NewID()
 	if err != nil {
-		return ACLRule{}, err
+		return store.ACLRule{}, err
 	}
 	subjectID := sql.NullString{String: input.SubjectID, Valid: input.SubjectID != ""}
 	_, err = s.db.ExecContext(ctx,
@@ -34,9 +20,9 @@ func (s *Store) CreateACLRule(ctx context.Context, input ACLRuleInput) (ACLRule,
 		id, string(input.SubjectKind), subjectID, input.Pattern, string(input.Action),
 	)
 	if err != nil {
-		return ACLRule{}, fmt.Errorf("create acl rule: %w", err)
+		return store.ACLRule{}, fmt.Errorf("create acl rule: %w", err)
 	}
-	return ACLRule{
+	return store.ACLRule{
 		ID:          id,
 		SubjectKind: input.SubjectKind,
 		SubjectID:   input.SubjectID,
@@ -45,7 +31,7 @@ func (s *Store) CreateACLRule(ctx context.Context, input ACLRuleInput) (ACLRule,
 	}, nil
 }
 
-func (s *Store) ListACLRules(ctx context.Context) ([]ACLRule, error) {
+func (s *Store) ListACLRules(ctx context.Context) ([]store.ACLRule, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, subject_kind, subject_id, pattern, action FROM acl_rules ORDER BY id`,
 	)
@@ -54,7 +40,7 @@ func (s *Store) ListACLRules(ctx context.Context) ([]ACLRule, error) {
 	}
 	defer rows.Close()
 
-	var rules []ACLRule
+	var rules []store.ACLRule
 	for rows.Next() {
 		r, err := scanACLRule(rows)
 		if err != nil {
@@ -77,7 +63,7 @@ func (s *Store) CountACLRules(ctx context.Context) (int, error) {
 	return n, nil
 }
 
-func (s *Store) UpdateACLRule(ctx context.Context, rule ACLRule) error {
+func (s *Store) UpdateACLRule(ctx context.Context, rule store.ACLRule) error {
 	subjectID := sql.NullString{String: rule.SubjectID, Valid: rule.SubjectID != ""}
 	res, err := s.db.ExecContext(ctx,
 		`UPDATE acl_rules SET subject_kind = ?, subject_id = ?, pattern = ?, action = ? WHERE id = ?`,
@@ -111,13 +97,13 @@ func (s *Store) DeleteACLRule(ctx context.Context, id string) error {
 	return nil
 }
 
-func scanACLRule(row rowScanner) (ACLRule, error) {
-	var r ACLRule
+func scanACLRule(row rowScanner) (store.ACLRule, error) {
+	var r store.ACLRule
 	var subjectKind, action string
 	var subjectID sql.NullString
 	err := row.Scan(&r.ID, &subjectKind, &subjectID, &r.Pattern, &action)
 	if err != nil {
-		return ACLRule{}, fmt.Errorf("scan acl rule: %w", err)
+		return store.ACLRule{}, fmt.Errorf("scan acl rule: %w", err)
 	}
 	r.SubjectKind = acl.SubjectKind(subjectKind)
 	if subjectID.Valid {

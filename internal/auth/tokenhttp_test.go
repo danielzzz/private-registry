@@ -34,7 +34,7 @@ func newTestIssuer(t *testing.T) (*auth.Issuer, *rsa.PrivateKey) {
 	return issuer, key
 }
 
-func newTokenHandler(t *testing.T, s *store.Store) (http.Handler, *rsa.PrivateKey) {
+func newTokenHandler(t *testing.T, s store.Store) (http.Handler, *rsa.PrivateKey) {
 	t.Helper()
 	issuer, key := newTestIssuer(t)
 	authn := &auth.Authenticator{Store: s}

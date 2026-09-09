@@ -119,7 +119,7 @@ type aclRulesPageData struct {
 	Success string
 }
 
-func handleACLRulesGET(st *store.Store) http.HandlerFunc {
+func handleACLRulesGET(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := userIDFromContext(r)
 		if !ok {
@@ -171,7 +171,7 @@ func handleACLRulesGET(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleACLRulesPOST(st *store.Store) http.HandlerFunc {
+func handleACLRulesPOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -216,7 +216,7 @@ func handleACLRulesPOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleACLRuleDeletePOST(st *store.Store) http.HandlerFunc {
+func handleACLRuleDeletePOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)

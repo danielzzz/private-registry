@@ -13,15 +13,16 @@ import (
 
 	"github.com/danielzelisko/private-registry/internal/auth"
 	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzelisko/private-registry/internal/store/sqlite"
 	"github.com/danielzelisko/private-registry/internal/web"
 )
 
 const testSessionSecret = "test-session-secret"
 
-func openTestStore(t *testing.T) *store.Store {
+func openTestStore(t *testing.T) store.Store {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.db")
-	s, err := store.Open(path)
+	s, err := sqlite.Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +30,7 @@ func openTestStore(t *testing.T) *store.Store {
 	return s
 }
 
-func newTestHandler(t *testing.T, s *store.Store) http.Handler {
+func newTestHandler(t *testing.T, s store.Store) http.Handler {
 	t.Helper()
 	return web.NewHandler(web.Deps{
 		SessionSecret: testSessionSecret,
@@ -38,7 +39,7 @@ func newTestHandler(t *testing.T, s *store.Store) http.Handler {
 	})
 }
 
-func seedUsers(t *testing.T, s *store.Store) (adminPass, userPass string) {
+func seedUsers(t *testing.T, s store.Store) (adminPass, userPass string) {
 	t.Helper()
 	ctx := context.Background()
 	adminPass = "admin-pass-123"

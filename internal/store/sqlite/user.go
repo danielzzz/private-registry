@@ -1,35 +1,27 @@
-package store
+package sqlite
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
+
+	"github.com/danielzelisko/private-registry/internal/store"
 )
 
-type User struct {
-	ID           string
-	Username     string
-	PasswordHash string
-	Active       bool
-	Admin        bool
-}
-
-func (s *Store) CreateUser(ctx context.Context, username, passwordHash string, admin bool) (User, error) {
-	id, err := newID()
+func (s *Store) CreateUser(ctx context.Context, username, passwordHash string, admin bool) (store.User, error) {
+	id, err := store.NewID()
 	if err != nil {
-		return User{}, err
+		return store.User{}, err
 	}
 	active := true
 	_, err = s.db.ExecContext(ctx,
 		`INSERT INTO users (id, username, password_hash, active, admin) VALUES (?, ?, ?, ?, ?)`,
-		id, username, passwordHash, boolToInt(active), boolToInt(admin),
+		id, username, passwordHash, store.BoolToInt(active), store.BoolToInt(admin),
 	)
 	if err != nil {
-		return User{}, fmt.Errorf("create user: %w", err)
+		return store.User{}, fmt.Errorf("create user: %w", err)
 	}
-	return User{
+	return store.User{
 		ID:           id,
 		Username:     username,
 		PasswordHash: passwordHash,
@@ -38,26 +30,26 @@ func (s *Store) CreateUser(ctx context.Context, username, passwordHash string, a
 	}, nil
 }
 
-func (s *Store) GetUserByID(ctx context.Context, id string) (User, error) {
+func (s *Store) GetUserByID(ctx context.Context, id string) (store.User, error) {
 	row := s.db.QueryRowContext(ctx,
 		`SELECT id, username, password_hash, active, admin FROM users WHERE id = ?`,
 		id,
 	)
 	u, err := scanUser(row)
 	if err != nil {
-		return User{}, err
+		return store.User{}, err
 	}
 	return u, nil
 }
 
-func (s *Store) GetUserByUsername(ctx context.Context, username string) (User, error) {
+func (s *Store) GetUserByUsername(ctx context.Context, username string) (store.User, error) {
 	row := s.db.QueryRowContext(ctx,
 		`SELECT id, username, password_hash, active, admin FROM users WHERE username = ?`,
 		username,
 	)
 	u, err := scanUser(row)
 	if err != nil {
-		return User{}, err
+		return store.User{}, err
 	}
 	return u, nil
 }
@@ -81,18 +73,18 @@ func (s *Store) CountActiveAdmins(ctx context.Context) (int, error) {
 }
 
 func (s *Store) SetUserActive(ctx context.Context, id string, active bool) error {
-	return s.updateUserField(ctx, id, "active", boolToInt(active))
+	return s.updateUserField(ctx, id, "active", store.BoolToInt(active))
 }
 
 func (s *Store) SetUserAdmin(ctx context.Context, id string, admin bool) error {
-	return s.updateUserField(ctx, id, "admin", boolToInt(admin))
+	return s.updateUserField(ctx, id, "admin", store.BoolToInt(admin))
 }
 
 func (s *Store) UpdatePasswordHash(ctx context.Context, id string, passwordHash string) error {
 	return s.updateUserField(ctx, id, "password_hash", passwordHash)
 }
 
-func (s *Store) ListUsers(ctx context.Context) ([]User, error) {
+func (s *Store) ListUsers(ctx context.Context) ([]store.User, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, username, password_hash, active, admin FROM users ORDER BY username`,
 	)
@@ -101,7 +93,7 @@ func (s *Store) ListUsers(ctx context.Context) ([]User, error) {
 	}
 	defer rows.Close()
 
-	var users []User
+	var users []store.User
 	for rows.Next() {
 		u, err := scanUserRow(rows)
 		if err != nil {
@@ -131,15 +123,15 @@ func (s *Store) updateUserField(ctx context.Context, id, column string, value in
 	return nil
 }
 
-func scanUser(row *sql.Row) (User, error) {
-	var u User
+func scanUser(row *sql.Row) (store.User, error) {
+	var u store.User
 	var active, admin int
 	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash, &active, &admin)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, sql.ErrNoRows
+			return store.User{}, sql.ErrNoRows
 		}
-		return User{}, fmt.Errorf("scan user: %w", err)
+		return store.User{}, fmt.Errorf("scan user: %w", err)
 	}
 	u.Active = active != 0
 	u.Admin = admin != 0
@@ -150,29 +142,14 @@ type rowScanner interface {
 	Scan(dest ...any) error
 }
 
-func scanUserRow(row rowScanner) (User, error) {
-	var u User
+func scanUserRow(row rowScanner) (store.User, error) {
+	var u store.User
 	var active, admin int
 	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash, &active, &admin)
 	if err != nil {
-		return User{}, fmt.Errorf("scan user: %w", err)
+		return store.User{}, fmt.Errorf("scan user: %w", err)
 	}
 	u.Active = active != 0
 	u.Admin = admin != 0
 	return u, nil
-}
-
-func newID() (string, error) {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("generate id: %w", err)
-	}
-	return hex.EncodeToString(b), nil
-}
-
-func boolToInt(v bool) int {
-	if v {
-		return 1
-	}
-	return 0
 }

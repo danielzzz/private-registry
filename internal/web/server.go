@@ -14,7 +14,7 @@ import (
 type Deps struct {
 	SessionSecret string
 	Auth          *auth.Authenticator
-	Store         *store.Store
+	Store         store.Store
 	Token         http.Handler
 }
 
@@ -84,7 +84,7 @@ func requireSession(sessions *SessionManager, next http.Handler) http.Handler {
 	})
 }
 
-func requireAdmin(st *store.Store, sessions *SessionManager, next http.Handler) http.Handler {
+func requireAdmin(st store.Store, sessions *SessionManager, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := userIDFromContext(r)
 		if !ok {

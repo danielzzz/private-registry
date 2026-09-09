@@ -14,6 +14,7 @@ import (
 	"github.com/danielzelisko/private-registry/internal/acl"
 	"github.com/danielzelisko/private-registry/internal/auth"
 	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzelisko/private-registry/internal/store/sqlite"
 )
 
 const (
@@ -42,7 +43,7 @@ func main() {
 }
 
 func run(dbPath string) error {
-	s, err := store.Open(dbPath)
+	s, err := sqlite.Open(dbPath)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func run(dbPath string) error {
 	return nil
 }
 
-func ensureUser(ctx context.Context, s *store.Store, username, password string) (store.User, bool, error) {
+func ensureUser(ctx context.Context, s store.Store, username, password string) (store.User, bool, error) {
 	existing, err := s.GetUserByUsername(ctx, username)
 	if err == nil {
 		return existing, false, nil

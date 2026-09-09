@@ -16,7 +16,7 @@ var (
 )
 
 type Authenticator struct {
-	Store *store.Store
+	Store store.Store
 }
 
 func (a *Authenticator) Authenticate(ctx context.Context, username, secret string) (store.User, error) {

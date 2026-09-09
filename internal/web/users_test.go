@@ -48,7 +48,7 @@ func assertDashboardCount(t *testing.T, html, tile string, want int) {
 	}
 }
 
-func seedDashboardEntities(t *testing.T, s *store.Store) {
+func seedDashboardEntities(t *testing.T, s store.Store) {
 	t.Helper()
 	ctx := context.Background()
 	admin, err := s.GetUserByUsername(ctx, "admin")

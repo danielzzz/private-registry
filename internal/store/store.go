@@ -1,33 +1,38 @@
 package store
 
 import (
-	"database/sql"
-	"fmt"
-
-	_ "modernc.org/sqlite"
+	"context"
+	"time"
 )
 
-type Store struct {
-	db *sql.DB
-}
+type Store interface {
+	Close() error
 
-func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
-	if err != nil {
-		return nil, fmt.Errorf("open sqlite: %w", err)
-	}
-	if err := db.Ping(); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("ping sqlite: %w", err)
-	}
-	s := &Store{db: db}
-	if err := s.migrate(); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("migrate: %w", err)
-	}
-	return s, nil
-}
+	CreateUser(ctx context.Context, username, passwordHash string, admin bool) (User, error)
+	GetUserByID(ctx context.Context, id string) (User, error)
+	GetUserByUsername(ctx context.Context, username string) (User, error)
+	CountUsers(ctx context.Context) (int, error)
+	CountActiveAdmins(ctx context.Context) (int, error)
+	SetUserActive(ctx context.Context, id string, active bool) error
+	SetUserAdmin(ctx context.Context, id string, admin bool) error
+	UpdatePasswordHash(ctx context.Context, id string, passwordHash string) error
+	ListUsers(ctx context.Context) ([]User, error)
 
-func (s *Store) Close() error {
-	return s.db.Close()
+	CreateAPIToken(ctx context.Context, userID, name, hash string, expiresAt *time.Time) (string, error)
+	ListAPITokensByUser(ctx context.Context, userID string) ([]APIToken, error)
+	CountAPITokens(ctx context.Context) (int, error)
+	RevokeAPIToken(ctx context.Context, id string) error
+
+	CreateGroup(ctx context.Context, name string) (Group, error)
+	AddMember(ctx context.Context, groupID, userID string) error
+	RemoveMember(ctx context.Context, groupID, userID string) error
+	ListGroups(ctx context.Context) ([]Group, error)
+	CountGroups(ctx context.Context) (int, error)
+	ListGroupIDsForUser(ctx context.Context, userID string) ([]string, error)
+
+	CreateACLRule(ctx context.Context, input ACLRuleInput) (ACLRule, error)
+	ListACLRules(ctx context.Context) ([]ACLRule, error)
+	CountACLRules(ctx context.Context) (int, error)
+	UpdateACLRule(ctx context.Context, rule ACLRule) error
+	DeleteACLRule(ctx context.Context, id string) error
 }

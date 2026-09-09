@@ -93,7 +93,7 @@ type usersPageData struct {
 	Success string
 }
 
-func handleUsersGET(st *store.Store) http.HandlerFunc {
+func handleUsersGET(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := userIDFromContext(r)
 		if !ok {
@@ -132,7 +132,7 @@ func handleUsersGET(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleUsersPOST(st *store.Store) http.HandlerFunc {
+func handleUsersPOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -168,7 +168,7 @@ func handleUsersPOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleUserDisablePOST(st *store.Store) http.HandlerFunc {
+func handleUserDisablePOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -192,13 +192,13 @@ func handleUserDisablePOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleUserEnablePOST(st *store.Store) http.HandlerFunc {
-	return userActionPOST(st, func(ctx context.Context, st *store.Store, id string) error {
+func handleUserEnablePOST(st store.Store) http.HandlerFunc {
+	return userActionPOST(st, func(ctx context.Context, st store.Store, id string) error {
 		return st.SetUserActive(ctx, id, true)
 	}, "User+enabled")
 }
 
-func handleUserToggleAdminPOST(st *store.Store) http.HandlerFunc {
+func handleUserToggleAdminPOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -231,7 +231,7 @@ func handleUserToggleAdminPOST(st *store.Store) http.HandlerFunc {
 	}
 }
 
-func handleUserResetPasswordPOST(st *store.Store) http.HandlerFunc {
+func handleUserResetPasswordPOST(st store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -264,7 +264,7 @@ func handleUserResetPasswordPOST(st *store.Store) http.HandlerFunc {
 }
 
 // guardLastActiveAdmin returns an error when the target is the only active admin.
-func guardLastActiveAdmin(ctx context.Context, st *store.Store, targetID string) error {
+func guardLastActiveAdmin(ctx context.Context, st store.Store, targetID string) error {
 	u, err := st.GetUserByID(ctx, targetID)
 	if err != nil {
 		return err
@@ -282,9 +282,9 @@ func guardLastActiveAdmin(ctx context.Context, st *store.Store, targetID string)
 	return nil
 }
 
-type userAction func(ctx context.Context, st *store.Store, id string) error
+type userAction func(ctx context.Context, st store.Store, id string) error
 
-func userActionPOST(st *store.Store, action userAction, successMsg string) http.HandlerFunc {
+func userActionPOST(st store.Store, action userAction, successMsg string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
