@@ -31,3 +31,8 @@ func Open(dsn string) (*Store, error) {
 func (s *Store) Close() error {
 	return s.db.Close()
 }
+
+// SQL exposes the underlying database for one-shot migration tools.
+func (s *Store) SQL() *sql.DB {
+	return s.db
+}
