@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzelisko/private-registry/internal/store/mysql"
 	"github.com/danielzelisko/private-registry/internal/store/sqlite"
 )
 
@@ -12,7 +13,7 @@ func Open(driver, path, dsn string) (store.Store, error) {
 	case "sqlite":
 		return sqlite.Open(path)
 	case "mysql":
-		return nil, fmt.Errorf("mysql backend not implemented yet")
+		return mysql.Open(dsn)
 	default:
 		return nil, fmt.Errorf("unknown database driver %q", driver)
 	}
