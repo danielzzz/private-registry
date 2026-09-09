@@ -4,6 +4,22 @@ Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. T
   
 You can use it if you want simple way limit access to your private docker registry.
 
+## Screenshots
+
+Admin UI from a live install (usernames, token names, subjects, and repo patterns blacked out):
+
+| Login | Dashboard |
+| ----- | --------- |
+| ![Login](docs/screenshots/01-login.png) | ![Dashboard](docs/screenshots/02-dashboard.png) |
+
+| Users | API Tokens |
+| ----- | ---------- |
+| ![Users](docs/screenshots/03-users.png) | ![API Tokens](docs/screenshots/04-tokens.png) |
+
+| Groups | ACL Rules |
+| ------ | --------- |
+| ![Groups](docs/screenshots/05-groups.png) | ![ACL Rules](docs/screenshots/06-acl.png) |
+
 ## Quick start (Docker Compose)
 
 ```bash
