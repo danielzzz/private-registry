@@ -36,7 +36,7 @@ func TestIssuerMintProducesValidRegistryJWT(t *testing.T) {
 	}
 
 	access := []acl.Scope{
-		{Type: "repository", Name: "danielzelisko/app", Actions: []string{"pull", "push"}},
+		{Type: "repository", Name: "myorg/app", Actions: []string{"pull", "push"}},
 	}
 	tokenString, err := issuer.Mint("user-123", access)
 	if err != nil {
@@ -109,7 +109,7 @@ func TestIssuerMintProducesValidRegistryJWT(t *testing.T) {
 	if err := json.Unmarshal(scopeJSON, &scope); err != nil {
 		t.Fatal(err)
 	}
-	if scope.Type != "repository" || scope.Name != "danielzelisko/app" {
+	if scope.Type != "repository" || scope.Name != "myorg/app" {
 		t.Fatalf("scope=%+v", scope)
 	}
 	if len(scope.Actions) != 2 || scope.Actions[0] != "pull" || scope.Actions[1] != "push" {
@@ -192,7 +192,7 @@ func TestIssuerMintAccessClaimUsesLowercaseJSONKeys(t *testing.T) {
 	}
 
 	tokenString, err := issuer.Mint("user-1", []acl.Scope{
-		{Type: "repository", Name: "danielzelisko/app", Actions: []string{"pull"}},
+		{Type: "repository", Name: "myorg/app", Actions: []string{"pull"}},
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -182,7 +182,7 @@ func TestTokenHandlerBasicAuthPushAllowed(t *testing.T) {
 	_, err = s.CreateACLRule(ctx, store.ACLRuleInput{
 		SubjectKind: acl.SubjectUser,
 		SubjectID:   user.ID,
-		Pattern:     "danielzelisko/*",
+		Pattern:     "myorg/*",
 		Action:      acl.ActionPush,
 	})
 	if err != nil {
@@ -190,7 +190,7 @@ func TestTokenHandlerBasicAuthPushAllowed(t *testing.T) {
 	}
 
 	h, key := newTokenHandler(t, s)
-	path := "/token?service=" + testService + "&scope=repository:danielzelisko/app:push"
+	path := "/token?service=" + testService + "&scope=repository:myorg/app:push"
 	rec := tokenRequest(t, h, path, "alice", "s3cr3t")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())
@@ -201,7 +201,7 @@ func TestTokenHandlerBasicAuthPushAllowed(t *testing.T) {
 	if len(access) != 1 {
 		t.Fatalf("access=%+v", access)
 	}
-	if access[0].Name != "danielzelisko/app" {
+	if access[0].Name != "myorg/app" {
 		t.Fatalf("name=%q", access[0].Name)
 	}
 	if len(access[0].Actions) != 2 || access[0].Actions[0] != "pull" || access[0].Actions[1] != "push" {
@@ -228,7 +228,7 @@ func TestTokenHandlerBadPassword(t *testing.T) {
 	}
 
 	h, _ := newTokenHandler(t, s)
-	path := "/token?service=" + testService + "&scope=repository:danielzelisko/app:pull"
+	path := "/token?service=" + testService + "&scope=repository:myorg/app:pull"
 	rec := tokenRequest(t, h, path, "alice", "wrong")
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())
@@ -299,7 +299,7 @@ func TestTokenHandlerNoScopesAllowed(t *testing.T) {
 	}
 
 	h, _ := newTokenHandler(t, s)
-	path := "/token?service=" + testService + "&scope=repository:danielzelisko/app:pull"
+	path := "/token?service=" + testService + "&scope=repository:myorg/app:pull"
 	rec := tokenRequest(t, h, path, "alice", "s3cr3t")
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())

@@ -11,9 +11,9 @@ func TestMatch(t *testing.T) {
 		pattern, name string
 		want          bool
 	}{
-		{"danielzelisko/test-project*", "danielzelisko/test-project", true},
-		{"danielzelisko/test-project*", "danielzelisko/test-project-app", true},
-		{"danielzelisko/test-project*", "danielzelisko/other", false},
+		{"myorg/test-project*", "myorg/test-project", true},
+		{"myorg/test-project*", "myorg/test-project-app", true},
+		{"myorg/test-project*", "myorg/other", false},
 		{"library/*", "library/nginx", true},
 		{"library/*", "library/nginx/extra", false},
 		{"*", "thing", true},

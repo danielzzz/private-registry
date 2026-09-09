@@ -1,4 +1,6 @@
 .worktrees/
+.superpowers/
+docs/superpowers/
 
 # Local env and secrets
 .env

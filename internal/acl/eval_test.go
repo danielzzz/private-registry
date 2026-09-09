@@ -18,10 +18,10 @@ func contains(actions []string, action string) bool {
 func TestEvaluate_UserDirectPull(t *testing.T) {
 	rules := []acl.Rule{{
 		SubjectKind: acl.SubjectUser, SubjectID: "u1",
-		Pattern: "danielzelisko/test-project*", Action: acl.ActionPull,
+		Pattern: "myorg/test-project*", Action: acl.ActionPull,
 	}}
 	id := acl.Identity{UserID: "u1"}
-	req := []acl.Scope{{Type: "repository", Name: "danielzelisko/test-project-app", Actions: []string{"pull"}}}
+	req := []acl.Scope{{Type: "repository", Name: "myorg/test-project-app", Actions: []string{"pull"}}}
 	got := acl.Evaluate(id, rules, req)
 	if len(got) != 1 || got[0].Name != req[0].Name || !contains(got[0].Actions, "pull") {
 		t.Fatalf("got=%v", got)
