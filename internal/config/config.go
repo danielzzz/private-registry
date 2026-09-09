@@ -13,21 +13,25 @@ const (
 )
 
 type Config struct {
-	DatabasePath  string
-	HTTPAddr      string
+	DatabaseDriver  string
+	DatabasePath    string
+	DatabaseDSN     string
+	HTTPAddr        string
 	RegistryService string
-	TokenIssuer   string
-	TokenCertPath string
-	TokenKeyPath  string
-	TokenTTL      time.Duration
-	AdminUser     string
-	AdminPassword string
-	SessionSecret string
+	TokenIssuer     string
+	TokenCertPath   string
+	TokenKeyPath    string
+	TokenTTL        time.Duration
+	AdminUser       string
+	AdminPassword   string
+	SessionSecret   string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
+		DatabaseDriver:  envOrDefault("DATABASE_DRIVER", "sqlite"),
 		DatabasePath:    os.Getenv("DATABASE_PATH"),
+		DatabaseDSN:     os.Getenv("DATABASE_DSN"),
 		HTTPAddr:        envOrDefault("HTTP_ADDR", defaultHTTPAddr),
 		RegistryService: os.Getenv("REGISTRY_SERVICE"),
 		TokenIssuer:     os.Getenv("TOKEN_ISSUER"),
@@ -38,8 +42,17 @@ func Load() (Config, error) {
 		SessionSecret:   os.Getenv("SESSION_SECRET"),
 	}
 
-	if cfg.DatabasePath == "" {
-		return Config{}, fmt.Errorf("DATABASE_PATH is required")
+	switch cfg.DatabaseDriver {
+	case "sqlite":
+		if cfg.DatabasePath == "" {
+			return Config{}, fmt.Errorf("DATABASE_PATH is required when DATABASE_DRIVER=sqlite")
+		}
+	case "mysql":
+		if cfg.DatabaseDSN == "" {
+			return Config{}, fmt.Errorf("DATABASE_DSN is required when DATABASE_DRIVER=mysql")
+		}
+	default:
+		return Config{}, fmt.Errorf("DATABASE_DRIVER must be sqlite or mysql, got %q", cfg.DatabaseDriver)
 	}
 	if cfg.RegistryService == "" {
 		return Config{}, fmt.Errorf("REGISTRY_SERVICE is required")

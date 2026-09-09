@@ -37,7 +37,70 @@ func TestLoadDefaults(t *testing.T) {
 }
 
 func TestLoadRequiresDatabasePath(t *testing.T) {
+	t.Setenv("DATABASE_DRIVER", "sqlite")
 	t.Setenv("DATABASE_PATH", "")
+	_, err := config.Load()
+	if err == nil {
+		t.Fatal("expected error for missing DATABASE_PATH")
+	}
+}
+
+func TestLoadDefaultDriverSQLite(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("DATABASE_DRIVER", "")
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.DatabaseDriver != "sqlite" {
+		t.Fatalf("DatabaseDriver=%q", cfg.DatabaseDriver)
+	}
+}
+
+func TestLoadMySQLRequiresDSN(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("DATABASE_DRIVER", "mysql")
+	t.Setenv("DATABASE_PATH", "")
+	t.Setenv("DATABASE_DSN", "")
+	_, err := config.Load()
+	if err == nil {
+		t.Fatal("expected error for missing DATABASE_DSN")
+	}
+}
+
+func TestLoadMySQLOK(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("DATABASE_DRIVER", "mysql")
+	t.Setenv("DATABASE_PATH", "")
+	t.Setenv("DATABASE_DSN", "user:pass@tcp(127.0.0.1:3306)/auth?parseTime=true")
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.DatabaseDriver != "mysql" {
+		t.Fatalf("DatabaseDriver=%q", cfg.DatabaseDriver)
+	}
+	if cfg.DatabaseDSN == "" {
+		t.Fatal("expected DatabaseDSN")
+	}
+}
+
+func TestLoadUnknownDriver(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("DATABASE_DRIVER", "postgres")
+	_, err := config.Load()
+	if err == nil {
+		t.Fatal("expected error for unknown driver")
+	}
+}
+
+func TestLoadSQLiteRequiresPath(t *testing.T) {
+	t.Setenv("DATABASE_DRIVER", "sqlite")
+	t.Setenv("DATABASE_PATH", "")
+	t.Setenv("REGISTRY_SERVICE", "registry")
+	t.Setenv("TOKEN_ISSUER", "issuer")
+	t.Setenv("TOKEN_CERT_PATH", "/c")
+	t.Setenv("TOKEN_KEY_PATH", "/k")
 	_, err := config.Load()
 	if err == nil {
 		t.Fatal("expected error for missing DATABASE_PATH")
