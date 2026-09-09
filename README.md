@@ -1,6 +1,8 @@
 # private-registry
 
-Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite or MySQL, and serves `/token` for the registry plus `/admin` for management.
+Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite or MySQL, and serves `/token` for the registry plus `/admin` for management.  
+  
+You can use it if you want simple way limit access to your private docker registry.
 
 ## Quick start (Docker Compose)
 
@@ -10,10 +12,12 @@ cp .env.example .env   # set ADMIN_PASSWORD and SESSION_SECRET
 docker compose up -d --build
 ```
 
-| Service  | URL |
-|----------|-----|
-| Auth + admin | http://127.0.0.1:8080 |
-| Registry | localhost:5000 |
+
+| Service      | URL                                            |
+| ------------ | ---------------------------------------------- |
+| Auth + admin | [http://127.0.0.1:8080](http://127.0.0.1:8080) |
+| Registry     | localhost:5000                                 |
+
 
 Health check: `curl -sf http://127.0.0.1:8080/healthz` (expect `ok`).
 
@@ -37,20 +41,22 @@ Auth on `http://127.0.0.1:18080`, registry on `localhost:5000`. Manual steps: [e
 
 ## Environment variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_DRIVER` | no | `sqlite` | `sqlite` or `mysql` |
-| `DATABASE_PATH` | if sqlite | none | SQLite file path |
-| `DATABASE_DSN` | if mysql | none | MySQL DSN |
-| `REGISTRY_SERVICE` | yes | none | Registry service name (`aud` claim; must match registry config `service`) |
-| `TOKEN_ISSUER` | yes | none | JWT issuer (`iss`; must match registry config `issuer`) |
-| `TOKEN_CERT_PATH` | yes | none | Path to RSA signing certificate (PEM) |
-| `TOKEN_KEY_PATH` | yes | none | Path to RSA private key (PEM) |
-| `ADMIN_USER` | no* | none | Bootstrap admin username (first boot only) |
-| `ADMIN_PASSWORD` | no* | none | Bootstrap admin password (first boot only) |
-| `SESSION_SECRET` | yes | none | HMAC secret for admin session cookies |
-| `HTTP_ADDR` | no | `:8080` | HTTP listen address |
-| `TOKEN_TTL` | no | `300` | Token lifetime in seconds |
+
+| Variable           | Required  | Default  | Description                                                               |
+| ------------------ | --------- | -------- | ------------------------------------------------------------------------- |
+| `DATABASE_DRIVER`  | no        | `sqlite` | `sqlite` or `mysql`                                                       |
+| `DATABASE_PATH`    | if sqlite | none     | SQLite file path                                                          |
+| `DATABASE_DSN`     | if mysql  | none     | MySQL DSN                                                                 |
+| `REGISTRY_SERVICE` | yes       | none     | Registry service name (`aud` claim; must match registry config `service`) |
+| `TOKEN_ISSUER`     | yes       | none     | JWT issuer (`iss`; must match registry config `issuer`)                   |
+| `TOKEN_CERT_PATH`  | yes       | none     | Path to RSA signing certificate (PEM)                                     |
+| `TOKEN_KEY_PATH`   | yes       | none     | Path to RSA private key (PEM)                                             |
+| `ADMIN_USER`       | no*       | none     | Bootstrap admin username (first boot only)                                |
+| `ADMIN_PASSWORD`   | no*       | none     | Bootstrap admin password (first boot only)                                |
+| `SESSION_SECRET`   | yes       | none     | HMAC secret for admin session cookies                                     |
+| `HTTP_ADDR`        | no        | `:8080`  | HTTP listen address                                                       |
+| `TOKEN_TTL`        | no        | `300`    | Token lifetime in seconds                                                 |
+
 
 \* Required on first boot only to create the bootstrap admin user.
 
@@ -58,11 +64,13 @@ Auth on `http://127.0.0.1:18080`, registry on `localhost:5000`. Manual steps: [e
 
 Rules use Go `path.Match` glob semantics: `*` matches within a single path segment and does **not** cross `/`.
 
-| Pattern | Matches | Does not match |
-|---------|---------|----------------|
-| `myorg/app*` | `myorg/app`, `myorg/app-api` | `myorg/other` |
-| `library/*` | `library/nginx` | `library/nginx/extra` |
-| `public/*` | `public/alpine` | `public/alpine/latest` |
+
+| Pattern      | Matches                      | Does not match         |
+| ------------ | ---------------------------- | ---------------------- |
+| `myorg/app*` | `myorg/app`, `myorg/app-api` | `myorg/other`          |
+| `library/*`  | `library/nginx`              | `library/nginx/extra`  |
+| `public/*`   | `public/alpine`              | `public/alpine/latest` |
+
 
 Create rules in the admin UI (subject = user, group, or anonymous; action = pull or push). Push implies pull.
 
@@ -82,14 +90,24 @@ docker login localhost:5000 -u myuser -p 'prt_abc123_...'
 
 The token endpoint and `docker login` accept the same credentials.
 
+## Signing certificates (JWT)
+
+Auth signs registry tokens with an RSA key pair pointed at by `TOKEN_CERT_PATH` and `TOKEN_KEY_PATH`.
+
+**Default (demo and first deploy):** if the key file is missing at startup, auth generates a 2048-bit RSA key and a self-signed certificate (CN `private-registry`, ~10 year validity) and writes both PEMs. Later starts reuse those files. Compose and the local demo share a `certs` volume so the registry can mount the same `token.crt` as `rootcertbundle`.
+
+Losing or replacing the key invalidates existing tokens (the JWT `kid` changes). Back up the key and cert with your other secrets.
+
+**Provide your own files:** place PEMs at the configured paths before auth starts. Auth will load them and skip generation. The registry must use the matching public cert as `rootcertbundle`. See [deploy/compose/README.md](deploy/compose/README.md) (bind-mount) and [deploy/k8s/README.md](deploy/k8s/README.md) (Secret mount).
+
 ## Production notes
 
 Local Compose is HTTP and uses demo defaults. For a real deployment:
 
 1. Terminate TLS in front of auth and registry (reverse proxy or Ingress).
 2. Set a strong `ADMIN_PASSWORD` and a long random `SESSION_SECRET`. Never keep `changeme`.
-3. Persist the auth data volume (`token.crt` / `token.key`; SQLite file if using the sqlite driver). Back it up. Losing the signing key breaks existing tokens.
-4. Keep the auth Deployment at **one replica** (signing keys live on a single PVC).
+3. Persist auth state: signing cert/key (and SQLite file if using the sqlite driver), or store the key pair in a Secret / bind mount. Back it up.
+4. Keep the auth Deployment at **one replica** unless every replica mounts the **same** signing key (for example a shared Secret). Do not let each replica auto-generate its own key.
 5. Build and push your own image from the repo `Dockerfile`; pin that tag in k8s or Compose.
 
 See [SECURITY.md](SECURITY.md) for reporting and known limits.
@@ -100,6 +118,8 @@ See [SECURITY.md](SECURITY.md) for reporting and known limits.
 docker build -t your-registry.example/private-registry/auth:TAG .
 docker push your-registry.example/private-registry/auth:TAG
 ```
+
+
 
 ## CI
 
@@ -120,6 +140,8 @@ To migrate existing SQLite data to MySQL, run `go run ./cmd/migrate-sqlite-to-my
 ```bash
 go test ./...
 ```
+
+
 
 ## License
 

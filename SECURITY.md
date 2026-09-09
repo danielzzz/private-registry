@@ -23,7 +23,8 @@ Do not open a public issue for security bugs until there is a fix or an agreed d
 
 1. TLS in front of auth and registry
 2. Unique bootstrap admin password and session secret
-3. Persistent volume for `/data` (`token.crt` / `token.key`; SQLite file if using the sqlite driver)
-4. Backup that volume on a schedule you trust
+3. Persistent volume for `/data` when using auto-generated keys and/or SQLite; or mount signing PEMs from a Secret / bind mount (see README “Signing certificates”)
+4. Backup signing keys (and SQLite if used) on a schedule you trust
 5. ACL rules that default-deny; grant pull/push explicitly
 6. Prefer API tokens for CI over sharing the admin password
+7. One auth replica unless every replica shares the same signing key

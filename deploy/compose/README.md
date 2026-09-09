@@ -66,7 +66,49 @@ Auth listens on `http://127.0.0.1:8080`, registry on `localhost:5000`.
 | `../../Dockerfile` | Multi-stage build for the Go auth server |
 | `.env.example` | Required env vars |
 
-Shared volume `certs`: auth generates `token.crt` / `token.key` on first boot; registry reads the cert as `rootcertbundle`.
+Shared volume `certs`: by default auth generates `token.crt` / `token.key` on first boot; registry reads the cert as `rootcertbundle`.
+
+## Signing certificates
+
+### Auto (default)
+
+Leave the `certs` named volume empty. On first start auth creates:
+
+- `TOKEN_KEY_PATH` (default `/certs/token.key`) – RSA private key PEM  
+- `TOKEN_CERT_PATH` (default `/certs/token.crt`) – self-signed cert PEM  
+
+Registry already mounts `certs` read-only and uses `/certs/token.crt` in `registry-config.yml`.
+
+### Manual (provide your own)
+
+Generate a key and cert on the host (example with OpenSSL), then bind-mount a directory that already contains both files so auth does not generate new ones:
+
+```bash
+mkdir -p ./certs
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout ./certs/token.key \
+  -out ./certs/token.crt \
+  -days 3650 \
+  -subj "/CN=private-registry"
+chmod 600 ./certs/token.key
+```
+
+In `docker-compose.yml`, replace the named `certs` volume with a bind mount for both services (auth needs write only if you still allow auto-create; for fixed keys, read-only is fine on registry and optional on auth):
+
+```yaml
+# under auth.volumes and registry.volumes:
+- ./certs:/certs:ro
+```
+
+Remove `certs:` from the top-level `volumes:` list if nothing else uses it.
+
+Keep `TOKEN_CERT_PATH` / `TOKEN_KEY_PATH` pointing at `/certs/token.crt` and `/certs/token.key` (the Compose defaults). Restart:
+
+```bash
+docker compose up -d
+```
+
+If auth already generated keys into the named volume, remove that volume once (`docker compose down -v` deletes DB too; prefer `docker volume rm …_certs` only) or overwrite files inside the volume before switching.
 
 ## Notes
 
