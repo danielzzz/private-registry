@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 func adminSession(t *testing.T, h http.Handler, adminPass string) (cookie *http.Cookie, csrf string) {

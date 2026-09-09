@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
-	"github.com/danielzelisko/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/auth"
 	"github.com/golang-jwt/jwt/v5"
 )
 

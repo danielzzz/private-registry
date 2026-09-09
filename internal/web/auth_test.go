@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
-	"github.com/danielzelisko/private-registry/internal/store/sqlite"
-	"github.com/danielzelisko/private-registry/internal/web"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store/sqlite"
+	"github.com/danielzzz/private-registry/internal/web"
 )
 
 const testSessionSecret = "test-session-secret"

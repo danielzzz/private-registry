@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 func (s *Store) CreateUser(ctx context.Context, username, passwordHash string, admin bool) (store.User, error) {

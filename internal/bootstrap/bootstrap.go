@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 var ErrAdminCredentialsRequired = errors.New("ADMIN_USER and ADMIN_PASSWORD are required when the database has no users")

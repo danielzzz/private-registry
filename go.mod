@@ -1,4 +1,4 @@
-module github.com/danielzelisko/private-registry
+module github.com/danielzzz/private-registry
 
 go 1.26.5
 

@@ -3,7 +3,7 @@ package acl_test
 import (
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/acl"
 )
 
 func TestMatch(t *testing.T) {

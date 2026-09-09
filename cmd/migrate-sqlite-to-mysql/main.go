@@ -7,9 +7,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/danielzelisko/private-registry/internal/store/migratecopy"
-	"github.com/danielzelisko/private-registry/internal/store/mysql"
-	"github.com/danielzelisko/private-registry/internal/store/sqlite"
+	"github.com/danielzzz/private-registry/internal/store/migratecopy"
+	"github.com/danielzzz/private-registry/internal/store/mysql"
+	"github.com/danielzzz/private-registry/internal/store/sqlite"
 )
 
 const usageHint = `Copy auth data from SQLite to MySQL with preserved IDs.

@@ -8,8 +8,8 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 var apiTokensTemplate = template.Must(layoutTemplates.New("apitokens").Parse(`{{template "head" .}}

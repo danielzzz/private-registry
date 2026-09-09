@@ -11,10 +11,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
-	"github.com/danielzelisko/private-registry/internal/store/sqlite"
+	"github.com/danielzzz/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store/sqlite"
 )
 
 const (

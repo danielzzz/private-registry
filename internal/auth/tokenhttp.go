@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/acl"
 )
 
 type RulesFunc func(ctx context.Context) ([]acl.Rule, error)

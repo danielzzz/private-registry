@@ -4,8 +4,8 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 var aclRulesTemplate = template.Must(layoutTemplates.New("aclrules").Parse(`{{template "head" .}}

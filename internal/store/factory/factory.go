@@ -3,9 +3,9 @@ package factory
 import (
 	"fmt"
 
-	"github.com/danielzelisko/private-registry/internal/store"
-	"github.com/danielzelisko/private-registry/internal/store/mysql"
-	"github.com/danielzelisko/private-registry/internal/store/sqlite"
+	"github.com/danielzzz/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store/mysql"
+	"github.com/danielzzz/private-registry/internal/store/sqlite"
 )
 
 func Open(driver, path, dsn string) (store.Store, error) {

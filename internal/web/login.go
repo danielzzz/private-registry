@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/auth"
 )
 
 var loginTemplate = template.Must(template.New("login").Parse(`<!DOCTYPE html>

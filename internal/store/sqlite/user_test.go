@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/store"
-	"github.com/danielzelisko/private-registry/internal/store/sqlite"
+	"github.com/danielzzz/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store/sqlite"
 )
 
 func openTestDB(t *testing.T) store.Store {

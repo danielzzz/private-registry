@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 func TestCreateAndListACLRules(t *testing.T) {

@@ -3,7 +3,7 @@ package store
 import (
 	"time"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/acl"
 )
 
 type User struct {

@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/bootstrap"
-	"github.com/danielzelisko/private-registry/internal/config"
-	"github.com/danielzelisko/private-registry/internal/store/factory"
-	"github.com/danielzelisko/private-registry/internal/web"
+	"github.com/danielzzz/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/bootstrap"
+	"github.com/danielzzz/private-registry/internal/config"
+	"github.com/danielzzz/private-registry/internal/store/factory"
+	"github.com/danielzzz/private-registry/internal/web"
 )
 
 func main() {

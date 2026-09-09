@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/acl"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )

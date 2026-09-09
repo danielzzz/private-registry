@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/acl"
+	"github.com/danielzzz/private-registry/internal/acl"
 )
 
 func adminACLRulesSession(t *testing.T, h http.Handler, adminPass string) (cookie *http.Cookie, csrf string) {

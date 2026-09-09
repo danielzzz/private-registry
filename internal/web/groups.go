@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 var groupsTemplate = template.Must(layoutTemplates.New("groups").Parse(`{{template "head" .}}

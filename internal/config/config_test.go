@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danielzelisko/private-registry/internal/config"
+	"github.com/danielzzz/private-registry/internal/config"
 )
 
 func setRequiredEnv(t *testing.T) {

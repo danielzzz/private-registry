@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 func (s *Store) CreateGroup(ctx context.Context, name string) (store.Group, error) {

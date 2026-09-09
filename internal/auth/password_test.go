@@ -3,7 +3,7 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/auth"
 )
 
 func TestHashPasswordRoundTrip(t *testing.T) {

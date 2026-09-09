@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/web"
+	"github.com/danielzzz/private-registry/internal/web"
 )
 
 func TestHealthz(t *testing.T) {

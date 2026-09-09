@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
-	"github.com/danielzelisko/private-registry/internal/store/sqlite"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store/sqlite"
 )
 
 func openTestStore(t *testing.T) store.Store {

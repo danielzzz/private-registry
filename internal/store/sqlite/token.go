@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 func (s *Store) CreateAPIToken(ctx context.Context, userID, name, hash string, expiresAt *time.Time) (string, error) {

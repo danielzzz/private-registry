@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
-	"github.com/danielzelisko/private-registry/internal/store"
+	"github.com/danielzzz/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/store"
 )
 
 type Deps struct {

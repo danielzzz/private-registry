@@ -2,7 +2,7 @@
 
 ## Report a vulnerability
 
-Use [GitHub Security Advisories](https://github.com/danielzelisko/private-registry/security/advisories/new) for this repository.
+Use [GitHub Security Advisories](https://github.com/danielzzz/private-registry/security/advisories/new) for this repository.
 
 Do not open a public issue for security bugs until there is a fix or an agreed disclosure date.
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danielzelisko/private-registry/internal/auth"
+	"github.com/danielzzz/private-registry/internal/auth"
 )
 
 var apiTokenPlaintextRE = regexp.MustCompile(`prt_[^_]+_[0-9a-fA-F]{64}`)
