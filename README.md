@@ -88,6 +88,8 @@ Gitea Actions (`.gitea/workflows/ci.yml`) runs `go test ./...` on every push/PR,
 
 `registry.zelisko.net/private-registry/auth:main-<unix>-<sha>`
 
+Production cutover (hq + k3s consumers): see [deploy/hq/README.md](deploy/hq/README.md) and the servers repo `services-docker-compose/registry/CUTOVER.md`.
+
 ## Kubernetes (k3s)
 
 Raw manifests for a single-replica stack live in [deploy/k8s/](deploy/k8s/). See [deploy/k8s/README.md](deploy/k8s/README.md) for install steps. Use the published image above for `<AUTH_IMAGE>`.
