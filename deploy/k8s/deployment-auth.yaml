@@ -22,8 +22,13 @@ spec:
           env:
             - name: HTTP_ADDR
               value: ":8080"
-            - name: DATABASE_PATH
-              value: /data/registry-auth.db
+            - name: DATABASE_DRIVER
+              value: mysql
+            - name: DATABASE_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: registry-auth-secrets
+                  key: DATABASE_DSN
             - name: REGISTRY_SERVICE
               value: registry
             - name: TOKEN_ISSUER

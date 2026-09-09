@@ -10,20 +10,20 @@ Do not open a public issue for security bugs until there is a fix or an agreed d
 
 - Auth and registry sit behind TLS (reverse proxy or Ingress). The app itself speaks HTTP.
 - You set a strong `ADMIN_PASSWORD` and a long random `SESSION_SECRET`. Example values like `changeme` are for local demos only.
-- The SQLite file and RSA signing keys under your data volume are treated as secrets. Losing the signing key invalidates existing registry tokens; leaking it lets an attacker mint tokens.
+- Auth credentials (SQLite file or MySQL DSN) and RSA signing keys under your data volume are treated as secrets. Losing the signing key invalidates existing registry tokens; leaking it lets an attacker mint tokens.
 
 ## Known limits
 
 - Admin session cookies are `HttpOnly` and `SameSite=Lax`, but not `Secure`. Rely on HTTPS at the proxy, or terminate TLS only on trusted networks.
 - Login and `/token` rate limits are in-memory per process. They reset on restart and do not coordinate across hosts.
 - The admin UI loads Tailwind from a CDN. Pin or vendor the CSS if that supply chain is unacceptable for you.
-- Auth must stay at one replica while using the bundled SQLite layout.
+- Auth must stay at one replica while signing keys live on a single PVC.
 
 ## Production checklist
 
 1. TLS in front of auth and registry
 2. Unique bootstrap admin password and session secret
-3. Persistent volume for `/data` (database + `token.crt` / `token.key`)
+3. Persistent volume for `/data` (`token.crt` / `token.key`; SQLite file if using the sqlite driver)
 4. Backup that volume on a schedule you trust
 5. ACL rules that default-deny; grant pull/push explicitly
 6. Prefer API tokens for CI over sharing the admin password

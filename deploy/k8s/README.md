@@ -5,19 +5,21 @@ Raw Kubernetes manifests for a single-replica private registry stack on k3s.
 ## Prerequisites
 
 - k3s (or any Kubernetes cluster with an Ingress controller)
+- External MySQL database reachable from the cluster, with a dedicated user that has DDL and DML on the `registry_auth` schema (or the database named in your DSN)
 - Replace placeholders before applying:
   - image in `deployment-auth.yaml` (build from this repo's `Dockerfile` and push to your registry)
   - `<STORAGE_CLASS>` in `pvc.yaml` (k3s default: `local-path`)
   - `registry.example.com` and `auth.example.com` in `ingress.yaml`
   - `realm` URL in `deployment-registry.yaml` ConfigMap (must match the auth Ingress host)
   - strong values in `secret.yaml` (never reuse the example passwords)
+  - `DATABASE_DSN` in `secret.yaml` pointing at your external MySQL instance
 
 ## Install
 
 ```bash
 # 1. Create secrets (do not commit secret.yaml)
 cp secret.example.yaml secret.yaml
-# edit secret.yaml: ADMIN_USER, ADMIN_PASSWORD, SESSION_SECRET
+# edit secret.yaml: ADMIN_USER, ADMIN_PASSWORD, SESSION_SECRET, DATABASE_DSN
 
 kubectl apply -f namespace.yaml
 kubectl apply -f pvc.yaml
@@ -52,7 +54,7 @@ If the registry starts before those certs exist, it may fail briefly. Restart th
 
 ## Single replica only
 
-**Do not scale the auth Deployment beyond 1 replica.** SQLite and the signing key files live on a single `ReadWriteOnce` PVC. Multiple auth pods would corrupt the database or fight over the same files.
+**Do not scale the auth Deployment beyond 1 replica.** The RSA signing key files live on a single `ReadWriteOnce` PVC. Multiple auth pods would contend for the same key files.
 
 Registry image blobs use `emptyDir` in these manifests (ephemeral). For production, add a separate PVC for `/var/lib/registry`.
 
@@ -61,7 +63,8 @@ Registry image blobs use `emptyDir` in these manifests (ephemeral). For producti
 | Variable | Value in manifests |
 |----------|-------------------|
 | `HTTP_ADDR` | `:8080` |
-| `DATABASE_PATH` | `/data/registry-auth.db` |
+| `DATABASE_DRIVER` | `mysql` |
+| `DATABASE_DSN` | from Secret |
 | `REGISTRY_SERVICE` | `registry` |
 | `TOKEN_ISSUER` | `registry-auth` |
 | `TOKEN_CERT_PATH` | `/data/token.crt` |
@@ -71,6 +74,18 @@ Registry image blobs use `emptyDir` in these manifests (ephemeral). For producti
 | `SESSION_SECRET` | from Secret |
 
 `REGISTRY_SERVICE` and `TOKEN_ISSUER` must match `service` and `issuer` in the registry ConfigMap.
+
+## Cutover from SQLite
+
+If you are moving an existing SQLite deployment to MySQL, run the migration tool before flipping the driver:
+
+```bash
+go run ./cmd/migrate-sqlite-to-mysql \
+  -sqlite /path/to/registry-auth.db \
+  -mysql 'authuser:password@tcp(mysql.example.com:3306)/registry_auth?parseTime=true'
+```
+
+The target MySQL database must be empty. After a successful migration, update `secret.yaml` with the DSN and apply the updated auth Deployment (`DATABASE_DRIVER=mysql`).
 
 ## Smoke test
 

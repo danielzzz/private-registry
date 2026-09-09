@@ -1,6 +1,6 @@
 # private-registry
 
-Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite, and serves `/token` for the registry plus `/admin` for management.
+Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite or MySQL, and serves `/token` for the registry plus `/admin` for management.
 
 ## Quick start (Docker Compose)
 
@@ -39,7 +39,9 @@ Auth on `http://127.0.0.1:18080`, registry on `localhost:5000`. Manual steps: [e
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_PATH` | yes | none | SQLite database file path |
+| `DATABASE_DRIVER` | no | `sqlite` | `sqlite` or `mysql` |
+| `DATABASE_PATH` | if sqlite | none | SQLite file path |
+| `DATABASE_DSN` | if mysql | none | MySQL DSN |
 | `REGISTRY_SERVICE` | yes | none | Registry service name (`aud` claim; must match registry config `service`) |
 | `TOKEN_ISSUER` | yes | none | JWT issuer (`iss`; must match registry config `issuer`) |
 | `TOKEN_CERT_PATH` | yes | none | Path to RSA signing certificate (PEM) |
@@ -86,8 +88,8 @@ Local Compose is HTTP and uses demo defaults. For a real deployment:
 
 1. Terminate TLS in front of auth and registry (reverse proxy or Ingress).
 2. Set a strong `ADMIN_PASSWORD` and a long random `SESSION_SECRET`. Never keep `changeme`.
-3. Persist the auth data volume (SQLite + `token.crt` / `token.key`). Back it up. Losing the signing key breaks existing tokens.
-4. Keep the auth Deployment at **one replica** when using this SQLite layout.
+3. Persist the auth data volume (`token.crt` / `token.key`; SQLite file if using the sqlite driver). Back it up. Losing the signing key breaks existing tokens.
+4. Keep the auth Deployment at **one replica** (signing keys live on a single PVC).
 5. Build and push your own image from the repo `Dockerfile`; pin that tag in k8s or Compose.
 
 See [SECURITY.md](SECURITY.md) for reporting and known limits.
@@ -107,7 +109,11 @@ GitHub Actions (`.github/workflows/ci.yml`) runs `go test ./...` on push and pul
 
 Raw manifests for a single-replica stack live in [deploy/k8s/](deploy/k8s/). See [deploy/k8s/README.md](deploy/k8s/README.md). Set the auth container image to the tag you built above.
 
-**Do not scale the auth Deployment beyond 1 replica.** SQLite and the signing key files live on a single `ReadWriteOnce` PVC; multiple auth pods would corrupt the database or contend for the same key files.
+**Do not scale the auth Deployment beyond 1 replica.** Signing key files live on a single `ReadWriteOnce` PVC; multiple auth pods would contend for the same key files.
+
+K8s manifests default to `DATABASE_DRIVER=mysql` with an external DSN from a Secret. Compose and local demos use SQLite.
+
+To migrate existing SQLite data to MySQL, run `go run ./cmd/migrate-sqlite-to-mysql -sqlite <path> -mysql <dsn>` against an empty MySQL database, then switch the driver.
 
 ## Development
 
