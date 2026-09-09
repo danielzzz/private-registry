@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type Store struct {
@@ -12,7 +12,13 @@ type Store struct {
 }
 
 func Open(dsn string) (*Store, error) {
-	db, err := sql.Open("mysql", dsn)
+	cfg, err := mysql.ParseDSN(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("parse mysql dsn: %w", err)
+	}
+	// Match SQLite: RowsAffected counts matched rows, not only changed rows (no-op UPDATEs).
+	cfg.ClientFoundRows = true
+	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		return nil, fmt.Errorf("open mysql: %w", err)
 	}
