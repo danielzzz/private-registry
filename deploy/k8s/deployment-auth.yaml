@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: registry.zelisko.net/private-registry/auth:main # replace with a published CI tag
+          image: ghcr.io/example/private-registry-auth:latest # replace with your built image
           ports:
             - name: http
               containerPort: 8080

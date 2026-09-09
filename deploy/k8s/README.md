@@ -6,10 +6,11 @@ Raw Kubernetes manifests for a single-replica private registry stack on k3s.
 
 - k3s (or any Kubernetes cluster with an Ingress controller)
 - Replace placeholders before applying:
-  - image tag in `deployment-auth.yaml` (CI publishes `registry.zelisko.net/private-registry/auth:main-<unix>-<sha>`)
+  - image in `deployment-auth.yaml` (build from this repo's `Dockerfile` and push to your registry)
   - `<STORAGE_CLASS>` in `pvc.yaml` (k3s default: `local-path`)
   - `registry.example.com` and `auth.example.com` in `ingress.yaml`
   - `realm` URL in `deployment-registry.yaml` ConfigMap (must match the auth Ingress host)
+  - strong values in `secret.yaml` (never reuse the example passwords)
 
 ## Install
 

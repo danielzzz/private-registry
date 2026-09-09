@@ -1,6 +1,6 @@
 # private-registry
 
-A self-hosted Docker Registry v2 stack with **token authentication** and an **HTMX admin UI**. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite, and serves `/token` for the registry plus `/admin` for management.
+Self-hosted Docker Registry v2 with token authentication and an HTMX admin UI. The Go auth service issues distribution-spec JWTs, stores users, groups, API tokens, and ACL rules in SQLite, and serves `/token` for the registry plus `/admin` for management.
 
 ## Quick start (Docker Compose)
 
@@ -17,25 +17,23 @@ docker compose up -d --build
 
 Health check: `curl -sf http://127.0.0.1:8080/healthz` (expect `ok`).
 
-Log in to the registry with the bootstrap admin user:
+Log in to the registry with the bootstrap admin user from your `.env` (examples use `admin` / `changeme` for local demos only):
 
 ```bash
 docker login localhost:5000 -u admin -p changeme
 ```
 
-Use the `ADMIN_USER` / `ADMIN_PASSWORD` from your `.env`. Create ACL rules in the admin UI before pushing images.
+Create ACL rules in the admin UI before pushing images.
 
 See [deploy/compose/README.md](deploy/compose/README.md) for smoke tests and layout details.
 
 ### Full local demo (seed users, push, pull)
 
-One script starts the stack, creates a writer and a read-only user, pushes this project's image, and pulls it as the reader:
-
 ```bash
 ./examples/local-demo/demo.sh
 ```
 
-Uses auth on `http://127.0.0.1:18080` and registry on `localhost:5000`. Details and **manual test steps** (login, ACL, tags): [examples/local-demo/README.md](examples/local-demo/README.md).
+Auth on `http://127.0.0.1:18080`, registry on `localhost:5000`. Manual steps: [examples/local-demo/README.md](examples/local-demo/README.md).
 
 ## Environment variables
 
@@ -60,7 +58,7 @@ Rules use Go `path.Match` glob semantics: `*` matches within a single path segme
 
 | Pattern | Matches | Does not match |
 |---------|---------|----------------|
-| `danielzelisko/test-project*` | `danielzelisko/test-project`, `danielzelisko/test-project-app` | `danielzelisko/other` |
+| `myorg/app*` | `myorg/app`, `myorg/app-api` | `myorg/other` |
 | `library/*` | `library/nginx` | `library/nginx/extra` |
 | `public/*` | `public/alpine` | `public/alpine/latest` |
 
@@ -82,17 +80,32 @@ docker login localhost:5000 -u myuser -p 'prt_abc123_...'
 
 The token endpoint and `docker login` accept the same credentials.
 
-## CI and container image
+## Production notes
 
-Gitea Actions (`.gitea/workflows/ci.yml`) runs `go test ./...` on every push/PR, and on `main` builds and pushes:
+Local Compose is HTTP and uses demo defaults. For a real deployment:
 
-`registry.zelisko.net/private-registry/auth:main-<unix>-<sha>`
+1. Terminate TLS in front of auth and registry (reverse proxy or Ingress).
+2. Set a strong `ADMIN_PASSWORD` and a long random `SESSION_SECRET`. Never keep `changeme`.
+3. Persist the auth data volume (SQLite + `token.crt` / `token.key`). Back it up. Losing the signing key breaks existing tokens.
+4. Keep the auth Deployment at **one replica** when using this SQLite layout.
+5. Build and push your own image from the repo `Dockerfile`; pin that tag in k8s or Compose.
 
-Production cutover (hq + k3s consumers): see [deploy/hq/README.md](deploy/hq/README.md) and the servers repo `services-docker-compose/registry/CUTOVER.md`.
+See [SECURITY.md](SECURITY.md) for reporting and known limits.
+
+## Build the auth image
+
+```bash
+docker build -t your-registry.example/private-registry/auth:TAG .
+docker push your-registry.example/private-registry/auth:TAG
+```
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs `go test ./...` on push and pull requests.
 
 ## Kubernetes (k3s)
 
-Raw manifests for a single-replica stack live in [deploy/k8s/](deploy/k8s/). See [deploy/k8s/README.md](deploy/k8s/README.md) for install steps. Use the published image above for `<AUTH_IMAGE>`.
+Raw manifests for a single-replica stack live in [deploy/k8s/](deploy/k8s/). See [deploy/k8s/README.md](deploy/k8s/README.md). Set the auth container image to the tag you built above.
 
 **Do not scale the auth Deployment beyond 1 replica.** SQLite and the signing key files live on a single `ReadWriteOnce` PVC; multiple auth pods would corrupt the database or contend for the same key files.
 

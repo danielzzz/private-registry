@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: registry.zelisko.net
+  # Set secrets.REGISTRY_URL (and login secrets) on the Gitea runner for image publish.
   IMAGE_NAME: private-registry/auth
   GOMODCACHE: /var/cache/private-registry/gomod
   GOCACHE: /var/cache/private-registry/gocache
@@ -44,7 +44,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set registry
-        run: echo "REGISTRY=${REGISTRY_URL:-registry.zelisko.net}" >> $GITHUB_ENV
+        run: |
+          if [ -z "$REGISTRY_URL" ]; then
+            echo "REGISTRY_URL secret is required to publish" >&2
+            exit 1
+          fi
+          echo "REGISTRY=$REGISTRY_URL" >> $GITHUB_ENV
         env:
           REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
 
